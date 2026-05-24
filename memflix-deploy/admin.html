@@ -416,13 +416,51 @@ function saveConfig() {
   const key    = document.getElementById('cfgKey').value.trim();
   const cloud  = document.getElementById('cfgCloud').value.trim();
   const preset = document.getElementById('cfgPreset').value.trim();
-  if (!url || !key) { alert('Supabase URL and key are required'); return; }
-  if (!cloud || !preset) { alert('Cloudinary cloud name and preset are required'); return; }
+
+  // Clear old error
+  const oldErr = document.getElementById('cfgError');
+  if (oldErr) oldErr.remove();
+
+  if (!url || !key) {
+    showCfgError('Supabase URL and Anon Key are required');
+    return;
+  }
+
+  // Save all (Cloudinary optional — can add later)
   localStorage.setItem('mf_url', url);
   localStorage.setItem('mf_key', key);
-  localStorage.setItem('mf_cloud', cloud);
-  localStorage.setItem('mf_preset', preset);
-  initApp();
+  localStorage.setItem('mf_cloud', cloud || '');
+  localStorage.setItem('mf_preset', preset || '');
+
+  const btn = document.querySelector('.cfg-btn');
+  btn.textContent = 'Connecting…';
+  btn.disabled = true;
+
+  // Test Supabase connection before proceeding
+  const testDb = supabase.createClient(url, key);
+  testDb.from('memories').select('id', {count:'exact', head:true})
+    .then(({ error }) => {
+      btn.disabled = false;
+      btn.textContent = 'Save & Open Admin ▶';
+      if (error && error.code !== 'PGRST116') {
+        showCfgError('Connection failed: ' + error.message + ' — check your URL and key');
+        return;
+      }
+      initApp();
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.textContent = 'Save & Open Admin ▶';
+      showCfgError('Error: ' + err.message);
+    });
+}
+
+function showCfgError(msg) {
+  const el = document.createElement('p');
+  el.id = 'cfgError';
+  el.style.cssText = 'color:#E50914;font-size:12px;margin-top:12px;text-align:center;font-weight:600;line-height:1.5;';
+  el.textContent = '⚠ ' + msg;
+  document.querySelector('.cfg-btn').after(el);
 }
 
 function resetConfig() {
