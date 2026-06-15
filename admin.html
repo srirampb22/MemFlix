@@ -427,6 +427,9 @@ let selectedGradient = GRADIENTS[0];
 let isFeatured = false;
 let isFeaturedLocked = false;
 let cloudStore = null;
+let cloudDataCache = null;
+let cloudDataCacheAt = 0;
+const CLOUD_CACHE_MS = 30000;
 
 // ─────────────────────────────────────────────────
 //  CONFIG
@@ -481,19 +484,28 @@ async function switchProfile(p) {
 
 async function loadProfile(p) {
   const content = document.getElementById('main-content');
-  content.innerHTML = '<div class="empty"><div class="e-icon">⏳</div><p>Loading...</p></div>';
+  if (localData) {
+    renderProfileFromData(p, localData);
+  } else {
+    content.innerHTML = '<div class="empty"><div class="e-icon">⏳</div><p>Loading...</p></div>';
+  }
+
   try {
     localData = await loadLocalData(true);
-    allRows = localData.memory_rows
-      .filter(r => r.profile_id === p)
-      .sort(bySortOrder);
-    allMemories = localData.memories
-      .filter(m => m.profile_id === p)
-      .sort(bySortOrder);
-    renderContent(p);
+    renderProfileFromData(p, localData);
   } catch(e) {
     content.innerHTML = `<div class="empty"><div class="e-icon">⚠️</div><p>Error: ${e.message}</p></div>`;
   }
+}
+
+function renderProfileFromData(p, data) {
+  allRows = data.memory_rows
+    .filter(r => r.profile_id === p)
+    .sort(bySortOrder);
+  allMemories = data.memories
+    .filter(m => m.profile_id === p)
+    .sort(bySortOrder);
+  renderContent(p);
 }
 
 async function loadAllCounts() {
@@ -797,27 +809,62 @@ function closeRowModal() { document.getElementById('rowModal').classList.remove(
 async function saveRow() {
   const label = document.getElementById('newRowLabel').value.trim();
   if (!label) { showToast('Row name is required', 'err'); return; }
-  localData.memory_rows.push({
+
+  const row = {
     id: makeId('row'),
     profile_id: currentProfile,
     label,
     sort_order: allRows.length,
-  });
-  await saveLocalDataAsync(localData);
-  showToast('Row added ✓', 'ok');
-  closeRowModal();
-  await loadProfile(currentProfile);
+  };
+
+  const btn = document.querySelector('#rowModal .btn-save');
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
+
+  const beforeSave = JSON.parse(JSON.stringify(localData));
+  try {
+    localData.memory_rows.push(row);
+    if (cloudStore) {
+      await saveCloudDoc('memory_rows', row);
+      cloudDataCache = normalizeLocalData(localData);
+      cloudDataCacheAt = Date.now();
+    } else {
+      await saveLocalDataAsync(localData);
+    }
+    showToast('Row added ✓', 'ok');
+    closeRowModal();
+    renderProfileFromData(currentProfile, localData);
+  } catch(err) {
+    localData = beforeSave;
+    showToast('Could not add row: ' + (err?.message || err), 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Add Row'; }
+  }
 }
 
 async function deleteRow(id) {
   if (!confirm('Delete this row? Memories in it will become unassigned.')) return;
+  const beforeSave = JSON.parse(JSON.stringify(localData));
   localData.memory_rows = localData.memory_rows.filter(r => r.id !== id);
   localData.memories.forEach(m => {
     if (m.row_id === id) m.row_id = null;
   });
-  await saveLocalDataAsync(localData);
-  showToast('Row deleted', 'ok');
-  await loadProfile(currentProfile);
+  try {
+    if (cloudStore) {
+      await deleteCloudDoc('memory_rows', id);
+      await Promise.all(localData.memories
+        .filter(m => beforeSave.memories.find(old => old.id === m.id && old.row_id === id))
+        .map(m => saveCloudDoc('memories', m)));
+      cloudDataCache = normalizeLocalData(localData);
+      cloudDataCacheAt = Date.now();
+    } else {
+      await saveLocalDataAsync(localData);
+    }
+    showToast('Row deleted', 'ok');
+    renderProfileFromData(currentProfile, localData);
+  } catch(err) {
+    localData = beforeSave;
+    showToast('Could not delete row: ' + (err?.message || err), 'err');
+  }
 }
 
 // ─────────────────────────────────────────────────
@@ -1041,7 +1088,7 @@ async function handleBulkFiles(fileList, targetRowId = null) {
 
 async function compressImageForLocalStorage(file) {
   const bitmap = await loadImageBitmap(file);
-  const maxSide = 1400;
+  const maxSide = 1100;
   const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
@@ -1050,7 +1097,7 @@ async function compressImageForLocalStorage(file) {
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   if (bitmap.close) bitmap.close();
 
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.72));
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.68));
   if (!blob) throw new Error('Could not compress image');
   return blob;
 }
@@ -1193,16 +1240,23 @@ function saveLocalData(data) {
 }
 
 async function loadCloudData() {
+  const now = Date.now();
+  if (cloudDataCache && now - cloudDataCacheAt < CLOUD_CACHE_MS) {
+    return cloudDataCache;
+  }
+
   const { db, firestore } = cloudStore;
   const [rowSnap, memSnap] = await Promise.all([
     firestore.getDocs(firestore.collection(db, 'memory_rows')),
     firestore.getDocs(firestore.collection(db, 'memories')),
   ]);
 
-  return normalizeLocalData({
+  cloudDataCache = normalizeLocalData({
     memory_rows: rowSnap.docs.map(d => ({ id: d.id, ...d.data() })),
     memories: memSnap.docs.map(d => ({ id: d.id, ...d.data() })),
   });
+  cloudDataCacheAt = now;
+  return cloudDataCache;
 }
 
 async function saveCloudData(data) {
@@ -1211,6 +1265,19 @@ async function saveCloudData(data) {
     syncCloudCollection('memory_rows', normalized.memory_rows),
     syncCloudCollection('memories', normalized.memories),
   ]);
+  cloudDataCache = normalized;
+  cloudDataCacheAt = Date.now();
+}
+
+async function saveCloudDoc(collectionName, item) {
+  const { db, firestore } = cloudStore;
+  const { id, ...payload } = item;
+  await firestore.setDoc(firestore.doc(db, collectionName, id), payload);
+}
+
+async function deleteCloudDoc(collectionName, id) {
+  const { db, firestore } = cloudStore;
+  await firestore.deleteDoc(firestore.doc(db, collectionName, id));
 }
 
 async function syncCloudCollection(name, items) {
