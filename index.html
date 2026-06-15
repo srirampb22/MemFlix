@@ -304,6 +304,9 @@ let allMemories = [], allRows = [];
 let currentMemory = null;
 let likedMemories = new Set(JSON.parse(localStorage.getItem('mf_liked')||'[]'));
 let cloudStore = null;
+let cloudDataCache = null;
+let cloudDataCacheAt = 0;
+const CLOUD_CACHE_MS = 30000;
 
 // slideshow
 let slideItems = [], slideIndex = 0, slideTimer = null;
@@ -397,25 +400,33 @@ function selectProfile(p) {
 // ─────────────────────────────────────────────────────
 async function loadBrowse(profileId) {
   show('browse');
-  document.getElementById('heroTitle').textContent = 'Loading…';
-  document.getElementById('heroSub').textContent = '';
-  renderSkeletonRows();
+  if (localData) {
+    renderBrowseFromData(profileId, localData);
+  } else {
+    document.getElementById('heroTitle').textContent = 'Loading…';
+    document.getElementById('heroSub').textContent = '';
+    renderSkeletonRows();
+  }
 
   try {
     localData = await loadLocalData();
-    allRows = localData.memory_rows
-      .filter(r => r.profile_id === profileId)
-      .sort(bySortOrder);
-    allMemories = localData.memories
-      .filter(m => m.profile_id === profileId)
-      .sort(bySortOrder);
-    renderHero();
-    renderRows(allRows, allMemories);
+    renderBrowseFromData(profileId, localData);
   } catch(e) {
     document.getElementById('heroTitle').textContent = 'Could not load';
     document.getElementById('heroSub').textContent = e.message;
     document.getElementById('rowsContainer').innerHTML = '';
   }
+}
+
+function renderBrowseFromData(profileId, data) {
+  allRows = data.memory_rows
+    .filter(r => r.profile_id === profileId)
+    .sort(bySortOrder);
+  allMemories = data.memories
+    .filter(m => m.profile_id === profileId)
+    .sort(bySortOrder);
+  renderHero();
+  renderRows(allRows, allMemories);
 }
 
 // ─────────────────────────────────────────────────────
@@ -804,16 +815,23 @@ function getFirebaseConfig() {
 }
 
 async function loadCloudData() {
+  const now = Date.now();
+  if (cloudDataCache && now - cloudDataCacheAt < CLOUD_CACHE_MS) {
+    return cloudDataCache;
+  }
+
   const { db, firestore } = cloudStore;
   const [rowSnap, memSnap] = await Promise.all([
     firestore.getDocs(firestore.collection(db, 'memory_rows')),
     firestore.getDocs(firestore.collection(db, 'memories')),
   ]);
 
-  return normalizeLocalData({
+  cloudDataCache = normalizeLocalData({
     memory_rows: rowSnap.docs.map(d => ({ id: d.id, ...d.data() })),
     memories: memSnap.docs.map(d => ({ id: d.id, ...d.data() })),
   });
+  cloudDataCacheAt = now;
+  return cloudDataCache;
 }
 
 function normalizeLocalData(data) {
