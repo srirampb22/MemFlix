@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MemFlix — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --red:#E50914; --red2:#b20710; --dark:#000; --c1:#050505; --c2:#111;
+  --c3:#181818; --border:#282828; --text:#f5f5f5; --muted:#8c8c8c;
+  --font:'Montserrat',sans-serif; --bebas:'Bebas Neue',sans-serif;
+}
+body{background:#000;color:var(--text);font-family:var(--font);min-height:100vh;}
+button{font-family:var(--font);}
+
+/* ─── CONFIG ───────────────────────────────── */
+#config-screen{min-height:100vh;display:none;align-items:center;justify-content:center;padding:24px;}
+.cfg-box{width:100%;max-width:460px;background:linear-gradient(180deg,#171717,#0b0b0b);border-radius:10px;padding:40px;border:1px solid #2a2a2a;box-shadow:0 28px 90px rgba(0,0,0,.88),0 0 0 1px rgba(255,255,255,.02) inset;}
+.cfg-logo{font-family:var(--bebas);font-size:38px;color:var(--red);letter-spacing:.05em;}
+.cfg-sub{font-size:12px;color:var(--muted);margin:4px 0 32px;letter-spacing:.5px;}
+.cfg-section-tag{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block;}
+.cfg-section{margin-bottom:18px;}
+.cfg-input{width:100%;background:#111;border:1px solid #333;color:var(--text);font-family:var(--font);font-size:13px;padding:12px 14px;border-radius:6px;outline:none;transition:border .2s,box-shadow .2s;}
+.cfg-input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,.16);}
+.cfg-hint{font-size:11px;color:var(--muted);margin-top:5px;}
+.cfg-divider{border:none;border-top:1px solid var(--border);margin:22px 0;}
+.cfg-btn{width:100%;background:var(--red);color:#fff;border:none;padding:14px;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s;}
+.cfg-btn:hover{background:var(--red2);box-shadow:0 12px 30px rgba(229,9,20,.26);}
+.cfg-step{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;}
+.cfg-step-num{width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.cfg-step-text{font-size:12px;color:var(--muted);line-height:1.5;}
+.cfg-step-text a{color:var(--red);text-decoration:none;}
+.cfg-step-text a:hover{text-decoration:underline;}
+
+/* ─── APP LAYOUT ───────────────────────────── */
+#admin-app{display:none;min-height:100vh;flex-direction:column;}
+
+/* ─── NAVBAR ───────────────────────────────── */
+.navbar{background:linear-gradient(180deg,#080808,#020202);padding:14px 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:100;box-shadow:0 16px 45px rgba(0,0,0,.58);}
+.nav-logo{font-family:var(--bebas);font-size:26px;color:var(--red);letter-spacing:.05em;text-shadow:0 0 20px rgba(229,9,20,.38);}
+.nav-badge{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:3px 7px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;}
+.nav-right{margin-left:auto;display:flex;gap:10px;}
+.btn-ghost{background:rgba(255,255,255,.02);color:var(--muted);border:1px solid var(--border);padding:7px 14px;border-radius:5px;font-size:11px;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
+.btn-ghost:hover{color:var(--text);border-color:#666;background:rgba(255,255,255,.06);box-shadow:0 10px 25px rgba(0,0,0,.35);}
+
+/* ─── BODY LAYOUT ──────────────────────────── */
+.app-body{display:flex;flex:1;}
+
+/* ─── SIDEBAR ──────────────────────────────── */
+.sidebar{width:230px;background:#050505;border-right:1px solid rgba(255,255,255,.06);padding:20px 0;flex-shrink:0;min-height:calc(100vh - 57px);box-shadow:18px 0 50px rgba(0,0,0,.25);}
+.sb-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:0 18px;margin-bottom:6px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 18px;cursor:pointer;transition:background .15s,box-shadow .15s;border-left:3px solid transparent;}
+.sb-item:hover{background:rgba(255,255,255,.045);}
+.sb-item.active{background:linear-gradient(90deg,rgba(229,9,20,.16),rgba(229,9,20,.025));border-left-color:var(--red);box-shadow:inset 0 0 28px rgba(229,9,20,.08);}
+.sb-avatar{width:38px;height:38px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.sb-name{font-size:13px;font-weight:600;line-height:1.2;}
+.sb-count{font-size:11px;color:var(--muted);}
+.sb-divider{border:none;border-top:1px solid var(--border);margin:16px 12px;}
+
+/* ─── CONTENT ──────────────────────────────── */
+.content{flex:1;padding:28px 32px;overflow-y:auto;background:#000;}
+.content-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.content-title{font-family:var(--bebas);font-size:28px;letter-spacing:.05em;color:var(--text);}
+.btn-add-row{background:rgba(255,255,255,.02);color:var(--text);border:1px solid var(--border);padding:9px 18px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;letter-spacing:.5px;}
+.btn-add-row:hover{background:rgba(255,255,255,.07);border-color:#666;box-shadow:0 12px 28px rgba(0,0,0,.36);}
+
+/* ─── FEATURED HERO CARD ────────────────────── */
+.section-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.featured-strip{background:linear-gradient(180deg,#141414,#0b0b0b);border-radius:8px;border:1px solid rgba(255,255,255,.07);padding:16px 18px;margin-bottom:28px;display:flex;align-items:center;gap:16px;box-shadow:0 18px 45px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.03);}
+.featured-thumb{width:72px;height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
+.featured-thumb img{width:100%;height:100%;object-fit:cover;}
+.featured-meta h3{font-size:14px;font-weight:700;}
+.featured-meta p{font-size:11px;color:var(--muted);margin-top:2px;}
+.featured-none{font-size:13px;color:var(--muted);font-style:italic;}
+.featured-strip .btn-set{margin-left:auto;background:transparent;color:var(--muted);border:1px solid var(--border);padding:7px 13px;border-radius:5px;font-size:11px;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.featured-strip .btn-set:hover{color:var(--text);border-color:#666;background:rgba(255,255,255,.05);}
+
+/* ─── BULK UPLOAD ────────────────────────────── */
+.bulk-upload{background:linear-gradient(180deg,#121212,#090909);border:2px dashed #2d2d2d;border-radius:8px;padding:18px;margin-bottom:28px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border .2s,background .2s,box-shadow .2s;position:relative;box-shadow:0 16px 40px rgba(0,0,0,.34);}
+.bulk-upload:hover,.bulk-upload.dragover{border-color:#777;background:#121212;box-shadow:0 22px 52px rgba(0,0,0,.5),0 0 42px rgba(229,9,20,.11);}
+.bulk-upload input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.bulk-upload-icon{width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.bulk-upload h3{font-size:14px;font-weight:700;margin-bottom:3px;}
+.bulk-upload p{font-size:11px;color:var(--muted);line-height:1.5;}
+.bulk-status{font-size:11px;color:var(--muted);margin:-18px 0 24px;}
+
+/* ─── ROW SECTIONS ──────────────────────────── */
+.row-block{margin-bottom:28px;}
+.row-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.row-hdr-name{font-size:14px;font-weight:700;color:var(--text);}
+.row-hdr-count{font-size:11px;color:var(--muted);}
+.row-hdr-right{margin-left:auto;display:flex;gap:8px;}
+.btn-sm{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 11px;border-radius:4px;font-size:11px;cursor:pointer;transition:all .15s;font-family:var(--font);}
+.btn-sm:hover{color:var(--text);border-color:#555;background:rgba(255,255,255,.04);}
+.btn-sm-red{border-color:transparent;color:#555;}
+.btn-sm-red:hover{color:#e05;border-color:#e05 !important;}
+
+/* ─── MEMORY GRID ───────────────────────────── */
+.mem-grid{display:flex;flex-wrap:wrap;gap:10px;border-radius:6px;transition:background .2s,outline .2s;}
+.mem-grid.dragover{background:rgba(255,255,255,.03);outline:2px dashed #777;outline-offset:6px;}
+.mem-card{width:155px;height:96px;border-radius:4px;position:relative;cursor:pointer;overflow:hidden;border:1px solid rgba(255,255,255,.04);transition:transform .24s cubic-bezier(.16,1,.3,1),border .15s,box-shadow .24s,filter .24s;flex-shrink:0;background:#111;box-shadow:0 8px 24px rgba(0,0,0,.62);}
+.mem-card:hover{transform:scale(1.08) translateY(-4px);border-color:rgba(255,255,255,.2);box-shadow:0 18px 44px rgba(0,0,0,.86),0 0 32px rgba(229,9,20,.12);filter:brightness(1.1);z-index:5;}
+.mem-card.is-featured{border-color:#f5c542;box-shadow:0 8px 24px rgba(0,0,0,.62),0 0 22px rgba(245,197,66,.16);}
+.mem-card-inner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.mem-card-inner img,.mem-card-inner video{width:100%;height:100%;object-fit:cover;}
+.mem-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,#000,rgba(0,0,0,.72));opacity:0;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s;}
+.mem-card:hover .mem-card-overlay{opacity:1;}
+.card-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;width:30px;height:30px;border-radius:5px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.card-btn:hover{background:rgba(255,255,255,.3);box-shadow:0 0 20px rgba(255,255,255,.16);}
+.card-btn.del:hover{background:rgba(229,9,20,.6);border-color:var(--red);}
+.mem-card-label{position:absolute;bottom:0;left:0;right:0;padding:5px 7px;background:linear-gradient(to top,rgba(0,0,0,.9),transparent);font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.star-badge{position:absolute;top:4px;right:4px;font-size:11px;text-shadow:0 2px 10px rgba(0,0,0,.8);}
+.lock-badge{position:absolute;top:4px;left:4px;font-size:11px;text-shadow:0 2px 10px rgba(0,0,0,.8);}
+
+/* ADD CARD */
+.add-mem-card{width:155px;height:96px;border-radius:4px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border .2s,background .2s,box-shadow .2s;flex-shrink:0;background:#090909;}
+.add-mem-card:hover{border-color:#666;background:rgba(255,255,255,.035);box-shadow:0 16px 40px rgba(0,0,0,.42);}
+.add-mem-card span{font-size:20px;}
+.add-mem-card p{font-size:10px;color:var(--muted);}
+
+/* ADD ROW STRIP */
+.add-row-strip{background:linear-gradient(180deg,#121212,#090909);border:2px dashed var(--border);border-radius:6px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border .2s,background .2s,box-shadow .2s;margin-top:4px;}
+.add-row-strip:hover{border-color:#666;background:#121212;box-shadow:0 18px 42px rgba(0,0,0,.42);}
+.add-row-strip .plus-icon{width:36px;height:36px;border-radius:6px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.add-row-strip p{font-size:13px;color:var(--muted);}
+
+/* ─── MODAL ─────────────────────────────────── */
+.modal-wrap{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.94);align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto;backdrop-filter:blur(8px);}
+.modal-wrap.open{display:flex;}
+.modal-box{width:100%;max-width:540px;background:#111;border-radius:8px;border:1px solid rgba(255,255,255,.08);overflow:hidden;animation:mIn .25s cubic-bezier(.16,1,.3,1);margin:auto;box-shadow:0 36px 120px rgba(0,0,0,.96),0 0 60px rgba(229,9,20,.1);}
+@keyframes mIn{from{opacity:0;transform:scale(.93) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-hdr{background:#070707;padding:17px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07);}
+.modal-hdr-title{font-size:15px;font-weight:700;}
+.modal-x{background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:color .15s;line-height:1;}
+.modal-x:hover{color:var(--text);}
+.modal-body{padding:22px 24px 12px;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;}
+.form-input,.form-select,.form-textarea{width:100%;background:#151515;border:1px solid #303030;color:var(--text);font-family:var(--font);font-size:13px;padding:10px 13px;border-radius:6px;outline:none;transition:border .2s,box-shadow .2s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,.14);}
+.form-textarea{min-height:72px;resize:vertical;line-height:1.5;}
+.form-select option{background:var(--c3);}
+.form-row2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+
+/* ─── GRADIENT PICKER ───────────────────────── */
+.grad-swatches{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
+.grad-sw{width:40px;height:28px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:border .15s,transform .15s;}
+.grad-sw:hover{transform:scale(1.1);}
+.grad-sw.sel{border-color:#fff;}
+
+/* ─── UPLOAD AREA ───────────────────────────── */
+.upload-box{border:2px dashed var(--border);border-radius:6px;padding:20px;text-align:center;cursor:pointer;transition:border .2s,background .2s,box-shadow .2s;position:relative;background:#0d0d0d;}
+.upload-box:hover,.upload-box.dragover{border-color:#666;background:#121212;box-shadow:0 18px 42px rgba(0,0,0,.42),0 0 34px rgba(229,9,20,.08);}
+.upload-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-ico{font-size:24px;margin-bottom:6px;}
+.upload-txt{font-size:12px;color:var(--muted);}
+.upload-hint{font-size:11px;color:#555;margin-top:3px;}
+.upload-prev{width:100%;border-radius:7px;margin-top:10px;max-height:160px;object-fit:cover;display:block;}
+.upload-progress{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden;}
+.upload-bar{height:100%;background:var(--red);width:0;transition:width .3s;border-radius:2px;}
+.upload-status{font-size:11px;margin-top:5px;text-align:center;}
+.upload-status.ok{color:#22c55e;}
+.upload-status.err{color:var(--red);}
+
+/* ─── TOGGLE ────────────────────────────────── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;}
+.toggle-label{font-size:13px;color:var(--text);}
+.toggle-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.tog{width:40px;height:22px;background:#333;border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.tog.on{background:var(--red);}
+.tog::after{content:'absolute';top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s;}
+.tog.on::after{left:21px;}
+
+/* ─── MODAL FOOTER ──────────────────────────── */
+.modal-ftr{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+.btn-save{background:var(--red);color:#fff;border:none;padding:11px 28px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
+.btn-save:hover{background:var(--red2);box-shadow:0 12px 30px rgba(229,9,20,.24);}
+.btn-save:disabled{background:#555;cursor:not-allowed;}
+.btn-cancel{background:transparent;color:var(--muted);border:1px solid var(--border);padding:11px 20px;border-radius:7px;font-size:13px;cursor:pointer;transition:all .15s;}
+.btn-cancel:hover{color:var(--text);border-color:#555;background:rgba(255,255,255,.04);}
+
+/* ─── ROW NAME MODAL ────────────────────────── */
+.row-modal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.88);align-items:center;justify-content:center;padding:24px;}
+.row-modal.open{display:flex;}
+.row-modal-box{background:#111;border-radius:8px;border:1px solid rgba(255,255,255,.08);padding:28px;width:100%;max-width:380px;animation:mIn .2s ease;box-shadow:0 32px 100px rgba(0,0,0,.94),0 0 50px rgba(229,9,20,.08);}
+
+/* ─── TOAST ─────────────────────────────────── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--c2);color:var(--text);padding:12px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:1000;border-left:3px solid var(--red);animation:tIn .3s ease,tOut .3s 2.7s ease forwards;pointer-events:none;}
+.toast.ok{border-left-color:#22c55e;}
+@keyframes tIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tOut{to{opacity:0;transform:translateY(8px)}}
+
+/* ─── EMPTY ─────────────────────────────────── */
+.empty{text-align:center;padding:48px 24px;color:var(--muted);}
+.empty .e-icon{font-size:36px;margin-bottom:10px;}
+.empty p{font-size:13px;}
+</style>
+</head>
+<body>
+
+<div id="config-screen">
+  <div class="cfg-box">
+    <div class="cfg-logo">MemFlix</div>
+    <p class="cfg-sub">Admin Setup — One time only, takes 3 minutes</p>
+
+    <p style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;">QUICK SETUP GUIDE</p>
+    <div class="cfg-step">
+      <div class="cfg-step-num">1</div>
+      <div class="cfg-step-text">Open the Admin panel and add category rows for each profile.</div>
+    </div>
+    <div class="cfg-step">
+      <div class="cfg-step-num">2</div>
+      <div class="cfg-step-text">Upload photos from this device; they are compressed and saved in this browser's local MemFlix data.</div>
+    </div>
+    <div class="cfg-step">
+      <div class="cfg-step-num">3</div>
+      <div class="cfg-step-text">Deploy these static files to Vercel when you are ready to publish the app shell.</div>
+    </div>
+
+    <hr class="cfg-divider"/>
+
+    <div class="cfg-section">
+      <span class="cfg-section-tag">Local Data Mode</span>
+      <input id="cfgUrl" class="cfg-input" type="text" placeholder="No remote database needed" disabled/>
+    </div>
+    <div class="cfg-section">
+      <span class="cfg-section-tag">API Key</span>
+      <input id="cfgKey" class="cfg-input" type="text" placeholder="No API key needed" disabled/>
+    </div>
+    <hr class="cfg-divider"/>
+    <div class="cfg-section">
+      <span class="cfg-section-tag">Media Storage</span>
+      <input id="cfgCloud" class="cfg-input" type="text" placeholder="Browser local storage" disabled/>
+    </div>
+    <div class="cfg-section">
+      <span class="cfg-section-tag">Upload Preset</span>
+      <input id="cfgPreset" class="cfg-input" type="text" placeholder="Not required in local mode" disabled/>
+      <p class="cfg-hint">Media is stored locally by the browser instead of being uploaded to a service.</p>
+    </div>
+    <button class="cfg-btn" onclick="saveConfig()">Save & Open Admin ▶</button>
+  </div>
+</div>
+
+<div id="admin-app">
+  <nav class="navbar">
+    <span class="nav-logo">MemFlix</span>
+    <span class="nav-badge">Admin</span>
+    <div class="nav-right">
+      <button class="btn-ghost" onclick="openMainApp()">👁 Preview App</button>
+      <button class="btn-ghost" onclick="exportLocalData()">⬇ Export Data</button>
+      <button class="btn-ghost" onclick="resetConfig()">⚙ Settings</button>
+    </div>
+  </nav>
+  <div class="app-body">
+    <aside class="sidebar">
+      <p class="sb-label">Profiles</p>
+      <div class="sb-item active" onclick="switchProfile('her')" id="sb-her">
+        <div class="sb-avatar" id="sba-her" style="background:linear-gradient(135deg,#f093fb,#f5576c)">👸</div>
+        <div><div class="sb-name" id="sbn-her">Samriti</div><div class="sb-count" id="sbc-her">0 memories</div></div>
+      </div>
+      <div class="sb-item" onclick="switchProfile('us')" id="sb-us">
+        <div class="sb-avatar" id="sba-us" style="background:linear-gradient(135deg,#E50914,#ff6b6b)">💑</div>
+        <div><div class="sb-name">Us ❤️</div><div class="sb-count" id="sbc-us">0 memories</div></div>
+      </div>
+      <div class="sb-item" onclick="switchProfile('me')" id="sb-me">
+        <div class="sb-avatar" id="sba-me" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">🧑‍💻</div>
+        <div><div class="sb-name" id="sbn-me">Ram</div><div class="sb-count" id="sbc-me">0 memories</div></div>
+      </div>
+      <hr class="sb-divider"/>
+      <p class="sb-label">Quick Tips</p>
+      <div style="padding:0 16px;">
+        <p style="font-size:11px;color:var(--muted);line-height:1.7;">
+          ⭐ Set one card as <em>Featured</em> per profile — it shows as the hero banner<br/><br/>
+          📸 Upload photos — they replace the emoji background<br/><br/>
+          🗂 Add rows to organise memories into categories<br/><br/>
+          🎯 Drag and drop files directly onto any row to add them to that specific category
+        </p>
+      </div>
+    </aside>
+    <main class="content" id="main-content">
+      <div class="empty"><div class="e-icon">⏳</div><p>Loading...</p></div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-wrap" id="memModal" onclick="closeMemModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <span class="modal-hdr-title" id="memModalTitle">Add Memory</span>
+      <button class="modal-x" onclick="closeMemModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fMemId"/>
+      <input type="hidden" id="fMediaUrl" value=""/>
+      <input type="hidden" id="fMediaType" value="none"/>
+      <input type="hidden" id="fStoragePath" value=""/>
+
+      <div class="form-row2">
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input id="fTitle" class="form-input" type="text" placeholder="e.g. Our First Date"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date Label</label>
+          <input id="fDate" class="form-input" type="text" placeholder="e.g. June 2023"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Subtitle (shown in hero if Featured)</label>
+        <input id="fSubtitle" class="form-input" type="text" placeholder="e.g. The night everything changed"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Personal Note</label>
+        <textarea id="fNote" class="form-textarea" placeholder="Write a heartfelt note about this memory..."></textarea>
+      </div>
+
+      <div class="form-row2">
+        <div class="form-group">
+          <label class="form-label">Emoji</label>
+          <input id="fEmoji" class="form-input" type="text" placeholder="📸" maxlength="8"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category Row</label>
+          <select id="fRowId" class="form-select"><option value="">None</option></select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Card Gradient (shown if no photo)</label>
+        <div class="grad-swatches" id="gradSwatches"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Photo</label>
+        <div class="upload-box" id="uploadBox" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleSingleDrop(event)">
+          <input type="file" id="fileInput" accept="image/*,.heic,.heif" onchange="handleFileSelect(event)"/>
+          <div class="upload-ico">📤</div>
+          <p class="upload-txt">Click to upload or drag a photo here</p>
+          <p class="upload-hint">JPG, PNG, WEBP, HEIC — compressed before saving</p>
+        </div>
+        <div class="upload-progress" id="uploadProgress" style="display:none">
+          <div class="upload-bar" id="uploadBar"></div>
+        </div>
+        <p class="upload-status" id="uploadStatus"></p>
+        <img id="previewImg" class="upload-prev" style="display:none"/>
+        <video id="previewVid" class="upload-prev" style="display:none" controls></video>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Set as Featured Memory</div>
+          <div class="toggle-sub">Appears as the hero banner for this profile</div>
+        </div>
+        <div class="tog" id="featuredToggle" onclick="toggleFeatured()"></div>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Fixed Featured Memory</div>
+          <div class="toggle-sub">Locks this image/video as the hero until you unlock it</div>
+        </div>
+        <div class="tog" id="featuredLockToggle" onclick="toggleFeaturedLock()"></div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-cancel" onclick="closeMemModal()">Cancel</button>
+      <button class="btn-save" id="saveBtn" onclick="saveMemory()">Save Memory</button>
+    </div>
+  </div>
+</div>
+
+<div class="row-modal" id="rowModal">
+  <div class="row-modal-box">
+    <p style="font-size:15px;font-weight:700;margin-bottom:18px;">Add Category Row</p>
+    <div class="form-group">
+      <label class="form-label">Row Name</label>
+      <input id="newRowLabel" class="form-input" type="text" placeholder="e.g. Trips Together ✈️"/>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn-cancel" style="flex:1" onclick="closeRowModal()">Cancel</button>
+      <button class="btn-save" style="flex:1" onclick="saveRow()">Add Row</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────
+//  CONSTANTS
+// ─────────────────────────────────────────────────
+const GRADIENTS = [
+  'linear-gradient(135deg,#E50914,#ff6b6b)',
+  'linear-gradient(135deg,#f093fb,#f5576c)',
+  'linear-gradient(135deg,#4facfe,#00f2fe)',
+  'linear-gradient(135deg,#43e97b,#38f9d7)',
+  'linear-gradient(135deg,#f7971e,#ffd200)',
+  'linear-gradient(135deg,#6a11cb,#2575fc)',
+  'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+  'linear-gradient(135deg,#fda085,#f6d365)',
+  'linear-gradient(135deg,#84fab0,#8fd3f4)',
+  'linear-gradient(135deg,#d4fc79,#96e6a1)',
+  'linear-gradient(135deg,#ff9a9e,#fecfef)',
+  'linear-gradient(135deg,#2d3561,#c05c7e)',
+];
+
+const PROFILE_META = {
+  her: { gradient:'linear-gradient(135deg,#f093fb,#f5576c)', emoji:'👸' },
+  me:  { gradient:'linear-gradient(135deg,#4facfe,#00f2fe)', emoji:'🧑‍💻' },
+  us:  { gradient:'linear-gradient(135deg,#E50914,#ff6b6b)', emoji:'💑' },
+};
+
+// ─────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────
+let localData = { memory_rows: [], memories: [] };
+let currentProfile = 'her';
+let allRows = [], allMemories = [];
+let editingMemId = null;
+let currentRowIdForAdd = null;
+let selectedGradient = GRADIENTS[0];
+let isFeatured = false;
+let isFeaturedLocked = false;
+let cloudStore = null;
+
+// ─────────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────────
+function saveConfig() {
+  initApp();
+}
+
+function resetConfig() {
+  if (!confirm('Clear all locally saved MemFlix data in this browser?')) return;
+  ['mf_local_data_v1','mf_liked'].forEach(k => localStorage.removeItem(k));
+  location.reload();
+}
+
+// ─────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', initApp);
+
+async function initApp() {
+  try {
+    await initCloudStore();
+    localData = await loadLocalData(true);
+    document.getElementById('config-screen').style.display = 'none';
+    document.getElementById('admin-app').style.display = 'flex';
+    buildGradientSwatches();
+    switchProfile('her');
+    loadAllCounts();
+  } catch(err) {
+    cloudStore = null;
+    console.error(err);
+    document.getElementById('config-screen').style.display = 'flex';
+    document.getElementById('admin-app').style.display = 'none';
+    const hint = document.querySelector('.cfg-hint');
+    if (hint) {
+      hint.textContent = 'Startup error: ' + (err?.message || err) + '. Check Firebase rules/config, or use localhost/admin.html.';
+      hint.style.color = '#ff6b6b';
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  PROFILE SWITCHING
+// ─────────────────────────────────────────────────
+async function switchProfile(p) {
+  currentProfile = p;
+  ['her','me','us'].forEach(id => {
+    document.getElementById('sb-'+id).classList.toggle('active', id === p);
+  });
+  await loadProfile(p);
+}
+
+async function loadProfile(p) {
+  const content = document.getElementById('main-content');
+  content.innerHTML = '<div class="empty"><div class="e-icon">⏳</div><p>Loading...</p></div>';
+  try {
+    localData = await loadLocalData(true);
+    allRows = localData.memory_rows
+      .filter(r => r.profile_id === p)
+      .sort(bySortOrder);
+    allMemories = localData.memories
+      .filter(m => m.profile_id === p)
+      .sort(bySortOrder);
+    renderContent(p);
+  } catch(e) {
+    content.innerHTML = `<div class="empty"><div class="e-icon">⚠️</div><p>Error: ${e.message}</p></div>`;
+  }
+}
+
+async function loadAllCounts() {
+  for (const p of ['her','me','us']) {
+    const count = localData.memories.filter(m => m.profile_id === p).length;
+    const el = document.getElementById('sbc-'+p);
+    if (el) el.textContent = `${count||0} memories`;
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  RENDER CONTENT
+// ─────────────────────────────────────────────────
+function renderContent(p) {
+  const featured = allMemories.find(m => m.is_featured_locked) || allMemories.find(m => m.is_featured);
+  const profileName = p === 'her' ? 'Samriti' : p === 'me' ? 'Ram' : 'Us';
+  let html = `
+    <div class="content-top">
+      <div class="content-title">${profileName} — Memories</div>
+      <button class="btn-add-row" onclick="openRowModal()">＋ Add Category Row</button>
+    </div>
+
+    <p class="section-label">Featured Hero Card</p>
+    <div class="featured-strip">`;
+
+  if (featured) {
+    const thumb = featured.media_url
+      ? `<img src="${featured.media_url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;"/>`
+      : `<span style="font-size:22px">${featured.emoji}</span>`;
+    html += `
+      <div class="featured-thumb" style="background:${featured.gradient}">${thumb}</div>
+      <div class="featured-meta"><h3>${featured.is_featured_locked ? '🔒 ' : ''}${escHtml(featured.title)}</h3><p>${featured.is_featured_locked ? 'Fixed Featured' : escHtml(featured.date_label||'No date')}</p></div>
+      <button class="btn-set" onclick="openEditMemory('${featured.id}')">Edit</button>`;
+  } else {
+    html += `<span class="featured-none">No featured memory set yet — add a memory and toggle "Set as Featured"</span>`;
+  }
+  html += `</div>`;
+
+  html += `
+    <div class="bulk-upload" id="bulkUploadBox" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleBulkDrop(event)">
+      <input type="file" id="bulkFileInput" accept="image/*,.heic,.heif" multiple onchange="handleBulkFiles(this.files)"/>
+      <div class="bulk-upload-icon">📤</div>
+      <div>
+        <h3>Drag & drop memories here, or browse</h3>
+        <p>Photos are compressed and added as separate memories for ${escHtml(profileName)}. You can edit titles, notes and rows after upload.</p>
+      </div>
+    </div>
+    <p class="bulk-status" id="bulkUploadStatus"></p>`;
+
+  if (allRows.length === 0) {
+    html += `<div class="empty"><div class="e-icon">📂</div><p>No category rows yet.<br>Click "Add Category Row" to create one, then add memories.</p></div>`;
+  } else {
+    allRows.forEach(row => {
+      const rowMems = allMemories.filter(m => m.row_id === row.id);
+      html += `
+        <div class="row-block">
+          <div class="row-hdr">
+            <span class="row-hdr-name">${escHtml(row.label)}</span>
+            <span class="row-hdr-count">${rowMems.length} card${rowMems.length !== 1 ? 's' : ''}</span>
+            <div class="row-hdr-right">
+              <button class="btn-sm btn-sm-red" onclick="deleteRow('${row.id}')">🗑 Delete Row</button>
+            </div>
+          </div>
+          <div class="mem-grid" ondragover="handleDragOverRow(event)" ondragleave="handleDragLeaveRow(event)" ondrop="handleDropRow(event, '${row.id}')">`;
+      rowMems.forEach(m => { html += renderMemCard(m); });
+      html += `
+            <div class="add-mem-card" onclick="openAddMemory('${row.id}')">
+              <span>＋</span><p>Add Memory</p>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  // Unassigned memories
+  const unassigned = allMemories.filter(m => !m.row_id);
+  if (unassigned.length > 0) {
+    html += `
+      <div class="row-block">
+        <div class="row-hdr"><span class="row-hdr-name">Unassigned</span></div>
+        <div class="mem-grid" ondragover="handleDragOverRow(event)" ondragleave="handleDragLeaveRow(event)" ondrop="handleDropRow(event, null)">`;
+    unassigned.forEach(m => { html += renderMemCard(m); });
+    html += `</div></div>`;
+  }
+
+  html += `
+    <div class="add-row-strip" onclick="openRowModal()">
+      <div class="plus-icon">＋</div>
+      <p>Add a new category row (e.g. "Weekend Trips ✈️")</p>
+    </div>`;
+
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function renderMemCard(m) {
+  const inner = m.media_url
+    ? (m.media_type === 'video'
+        ? `<video src="${m.media_url}" style="width:100%;height:100%;object-fit:cover"/>`
+        : `<img src="${m.media_url}" style="width:100%;height:100%;object-fit:cover"/>`)
+    : `<span style="font-size:26px">${m.emoji}</span>`;
+  return `
+    <div class="mem-card ${m.is_featured ? 'is-featured' : ''}" style="background:${m.gradient}">
+      <div class="mem-card-inner">${inner}</div>
+      <div class="mem-card-overlay">
+        <button class="card-btn" title="Edit" onclick="openEditMemory('${m.id}')">✏️</button>
+        <button class="card-btn del" title="Delete" onclick="deleteMemory('${m.id}')">🗑</button>
+      </div>
+      <div class="mem-card-label">${escHtml(m.title)}</div>
+      ${m.is_featured_locked ? '<div class="lock-badge">🔒</div>' : ''}
+      ${m.is_featured ? '<div class="star-badge">⭐</div>' : ''}
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────
+//  MEMORY MODAL
+// ─────────────────────────────────────────────────
+function openAddMemory(rowId) {
+  editingMemId = null;
+  currentRowIdForAdd = rowId;
+  resetMemForm();
+  document.getElementById('fRowId').value = rowId || '';
+  document.getElementById('memModalTitle').textContent = 'Add Memory';
+  document.getElementById('memModal').classList.add('open');
+}
+
+function openEditMemory(id) {
+  const m = allMemories.find(x => x.id === id);
+  if (!m) return;
+  editingMemId = id;
+  resetMemForm();
+  document.getElementById('fMemId').value   = m.id;
+  document.getElementById('fTitle').value   = m.title;
+  document.getElementById('fDate').value    = m.date_label || '';
+  document.getElementById('fSubtitle').value= m.subtitle || '';
+  document.getElementById('fNote').value    = m.note || '';
+  document.getElementById('fEmoji').value   = m.emoji || '📸';
+  document.getElementById('fRowId').value   = m.row_id || '';
+  document.getElementById('fMediaUrl').value= m.media_url || '';
+  document.getElementById('fMediaType').value = m.media_type || 'none';
+  document.getElementById('fStoragePath').value = m.storage_path || '';
+  isFeatured = m.is_featured || false;
+  isFeaturedLocked = m.is_featured_locked || false;
+  if (isFeaturedLocked) isFeatured = true;
+  document.getElementById('featuredToggle').classList.toggle('on', isFeatured);
+  document.getElementById('featuredLockToggle').classList.toggle('on', isFeaturedLocked);
+  selectedGradient = m.gradient || GRADIENTS[0];
+  updateGradSwatches();
+  if (m.media_url) {
+    if (m.media_type === 'video') {
+      document.getElementById('previewVid').src = m.media_url;
+      document.getElementById('previewVid').style.display = 'block';
+    } else {
+      document.getElementById('previewImg').src = m.media_url;
+      document.getElementById('previewImg').style.display = 'block';
+    }
+    document.getElementById('uploadStatus').textContent = '✓ Media saved';
+    document.getElementById('uploadStatus').className = 'upload-status ok';
+  }
+  document.getElementById('memModalTitle').textContent = 'Edit Memory';
+  document.getElementById('memModal').classList.add('open');
+}
+
+function resetMemForm() {
+  ['fMemId','fTitle','fDate','fSubtitle','fNote','fMediaUrl','fStoragePath'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('fEmoji').value = '📸';
+  document.getElementById('fMediaType').value = 'none';
+  document.getElementById('fRowId').value = currentRowIdForAdd || '';
+  isFeatured = false;
+  isFeaturedLocked = false;
+  document.getElementById('featuredToggle').classList.remove('on');
+  document.getElementById('featuredLockToggle').classList.remove('on');
+  selectedGradient = GRADIENTS[0];
+  updateGradSwatches();
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('previewVid').style.display = 'none';
+  document.getElementById('uploadStatus').textContent = '';
+  document.getElementById('uploadProgress').style.display = 'none';
+  populateRowSelect();
+}
+
+function closeMemModal(e) {
+  if (e && e.target !== document.getElementById('memModal')) return;
+  document.getElementById('memModal').classList.remove('open');
+}
+
+function toggleFeatured() {
+  isFeatured = !isFeatured;
+  if (!isFeatured && isFeaturedLocked) isFeaturedLocked = false;
+  document.getElementById('featuredToggle').classList.toggle('on', isFeatured);
+  document.getElementById('featuredLockToggle').classList.toggle('on', isFeaturedLocked);
+}
+
+function toggleFeaturedLock() {
+  isFeaturedLocked = !isFeaturedLocked;
+  if (isFeaturedLocked) isFeatured = true;
+  document.getElementById('featuredToggle').classList.toggle('on', isFeatured);
+  document.getElementById('featuredLockToggle').classList.toggle('on', isFeaturedLocked);
+}
+
+async function saveMemory() {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title) { showToast('Title is required', 'err'); return; }
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const row_id   = document.getElementById('fRowId').value || null;
+  const mediaUrl = document.getElementById('fMediaUrl').value;
+  const mediaType= document.getElementById('fMediaType').value;
+  const storagePath = document.getElementById('fStoragePath').value;
+  if (isFeaturedLocked) isFeatured = true;
+
+  const lockedFeatured = localData.memories.find(m =>
+    m.profile_id === currentProfile &&
+    m.is_featured_locked &&
+    m.id !== editingMemId
+  );
+  if (lockedFeatured && isFeatured) {
+    btn.disabled = false; btn.textContent = 'Save Memory';
+    showToast('Unlock the fixed featured memory first', 'err');
+    return;
+  }
+
+  const beforeSave = JSON.parse(JSON.stringify(localData));
+  try {
+    // If setting as featured, clear others first
+    if (isFeatured) {
+      localData.memories.forEach(m => {
+        if (m.profile_id === currentProfile) {
+          m.is_featured = false;
+          if (isFeaturedLocked) m.is_featured_locked = false;
+        }
+      });
+    }
+
+    const payload = {
+      profile_id:  currentProfile,
+      row_id,
+      title,
+      subtitle:   document.getElementById('fSubtitle').value.trim(),
+      date_label: document.getElementById('fDate').value.trim(),
+      note:       document.getElementById('fNote').value.trim(),
+      emoji:      document.getElementById('fEmoji').value.trim() || '📸',
+      gradient:   selectedGradient,
+      media_url:  mediaUrl,
+      media_type: mediaType,
+      storage_path: storagePath,
+      is_featured: isFeatured,
+      is_featured_locked: isFeaturedLocked,
+    };
+
+    if (editingMemId) {
+      const idx = localData.memories.findIndex(m => m.id === editingMemId);
+      if (idx !== -1) localData.memories[idx] = { ...localData.memories[idx], ...payload };
+    } else {
+      localData.memories.push({
+        id: makeId('mem'),
+        sort_order: allMemories.length,
+        ...payload,
+      });
+    }
+
+    await saveLocalDataAsync(localData);
+  } catch(err) {
+    localData = beforeSave;
+    btn.disabled = false; btn.textContent = 'Save Memory';
+    showToast(err.message, 'err');
+    return;
+  }
+
+  btn.disabled = false; btn.textContent = 'Save Memory';
+  showToast(editingMemId ? 'Memory updated ✓' : 'Memory added ✓', 'ok');
+  document.getElementById('memModal').classList.remove('open');
+  await loadProfile(currentProfile);
+  loadAllCounts();
+}
+
+async function deleteMemory(id) {
+  const memory = localData.memories.find(m => m.id === id);
+  if (memory?.is_featured_locked) {
+    showToast('Unlock the fixed featured memory before deleting it', 'err');
+    return;
+  }
+  if (!confirm('Delete this memory? This cannot be undone.')) return;
+  localData.memories = localData.memories.filter(m => m.id !== id);
+  await saveLocalDataAsync(localData);
+  await deleteStoredMedia(memory);
+  showToast('Memory deleted', 'ok');
+  await loadProfile(currentProfile);
+  loadAllCounts();
+}
+
+// ─────────────────────────────────────────────────
+//  ROW MODAL
+// ─────────────────────────────────────────────────
+function openRowModal() { document.getElementById('newRowLabel').value = ''; document.getElementById('rowModal').classList.add('open'); }
+function closeRowModal() { document.getElementById('rowModal').classList.remove('open'); }
+
+async function saveRow() {
+  const label = document.getElementById('newRowLabel').value.trim();
+  if (!label) { showToast('Row name is required', 'err'); return; }
+  localData.memory_rows.push({
+    id: makeId('row'),
+    profile_id: currentProfile,
+    label,
+    sort_order: allRows.length,
+  });
+  await saveLocalDataAsync(localData);
+  showToast('Row added ✓', 'ok');
+  closeRowModal();
+  await loadProfile(currentProfile);
+}
+
+async function deleteRow(id) {
+  if (!confirm('Delete this row? Memories in it will become unassigned.')) return;
+  localData.memory_rows = localData.memory_rows.filter(r => r.id !== id);
+  localData.memories.forEach(m => {
+    if (m.row_id === id) m.row_id = null;
+  });
+  await saveLocalDataAsync(localData);
+  showToast('Row deleted', 'ok');
+  await loadProfile(currentProfile);
+}
+
+// ─────────────────────────────────────────────────
+//  LOCAL MEDIA UPLOAD & DRAG/DROP
+// ─────────────────────────────────────────────────
+async function handleFileSelect(e) {
+  await handleSingleMemoryFiles(e.target.files);
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('dragover');
+}
+
+function handleDragLeave(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+}
+
+async function handleSingleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  await handleSingleMemoryFiles(e.dataTransfer.files);
+}
+
+async function handleBulkDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  await handleBulkFiles(e.dataTransfer.files);
+}
+
+function handleDragOverRow(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('dragover');
+}
+
+function handleDragLeaveRow(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+}
+
+async function handleDropRow(e, rowId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  await handleBulkFiles(e.dataTransfer.files, rowId === 'null' ? null : rowId);
+}
+
+async function handleSingleMemoryFiles(files) {
+  const file = files && files[0];
+  if (!file) return;
+  if (file.size > 1073741824) { showToast('File too large (max 1GB)', 'err'); return; }
+  if (file.type.startsWith('video/')) {
+    showToast('Videos are too large for browser storage. Use a hosted video URL instead.', 'err');
+    return;
+  }
+
+  document.getElementById('uploadProgress').style.display = 'block';
+  document.getElementById('uploadStatus').textContent = 'Processing…';
+  document.getElementById('uploadStatus').className = 'upload-status';
+  document.getElementById('uploadBar').style.width = '35%';
+
+  let isVideo = file.type.startsWith('video');
+  let resourceType = isVideo ? 'video' : 'image';
+  let processedBlob = file;
+
+  // Handle HEIC conversion
+  if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+    document.getElementById('uploadStatus').textContent = 'Converting HEIC format...';
+    try {
+      const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.8 });
+      processedBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+      resourceType = 'image';
+      isVideo = false;
+    } catch (err) {
+      document.getElementById('uploadStatus').textContent = '✕ HEIC conversion failed';
+      document.getElementById('uploadStatus').className = 'upload-status err';
+      return;
+    }
+  }
+
+  try {
+    if (!isVideo) {
+      document.getElementById('uploadStatus').textContent = 'Compressing photo for browser storage...';
+      document.getElementById('uploadBar').style.width = '65%';
+      processedBlob = await compressImageForLocalStorage(processedBlob);
+    }
+
+    document.getElementById('uploadStatus').textContent = cloudStore ? 'Uploading photo to cloud storage...' : 'Saving photo locally...';
+    document.getElementById('uploadBar').style.width = '82%';
+    const storedMedia = await storeMediaBlob(processedBlob, file);
+    const localUrl = storedMedia.mediaUrl;
+    if (isVideo) {
+      document.getElementById('previewVid').src = localUrl;
+      document.getElementById('previewVid').style.display = 'block';
+      document.getElementById('previewImg').style.display = 'none';
+    } else {
+      document.getElementById('previewImg').src = localUrl;
+      document.getElementById('previewImg').style.display = 'block';
+      document.getElementById('previewVid').style.display = 'none';
+    }
+    document.getElementById('fMediaUrl').value = localUrl;
+    document.getElementById('fMediaType').value = resourceType;
+    document.getElementById('fStoragePath').value = storedMedia.storagePath || '';
+    document.getElementById('uploadBar').style.width = '100%';
+    document.getElementById('uploadStatus').textContent = '✓ Saved locally';
+    document.getElementById('uploadStatus').className = 'upload-status ok';
+  } catch(err) {
+    document.getElementById('uploadStatus').textContent = '✕ Could not read file';
+    document.getElementById('uploadStatus').className = 'upload-status err';
+  }
+}
+
+async function handleBulkFiles(fileList, targetRowId = null) {
+  // Broadened to explicitly catch HEIC files which might lack a standard 'image/' MIME type depending on OS
+  const files = Array.from(fileList || []).filter(f => 
+    f.type.startsWith('image/') || 
+    f.type.startsWith('video/') || 
+    f.name.toLowerCase().endsWith('.heic') || 
+    f.name.toLowerCase().endsWith('.heif')
+  );
+  
+  if (files.length === 0) { showToast('Choose photos', 'err'); return; }
+
+  const status = document.getElementById('bulkUploadStatus');
+  const maxBytes = 1073741824; // 1GB
+  const accepted = files.filter(f => f.size <= maxBytes);
+  const skippedSize = files.length - accepted.length;
+  if (accepted.length === 0) { showToast('Files are too large (max 1GB each)', 'err'); return; }
+
+  let successful = 0;
+  let failedHeic = 0;
+  let skippedVideo = 0;
+  let skippedStorage = 0;
+  const originalData = JSON.parse(JSON.stringify(localData));
+
+  try {
+    for (let i = 0; i < accepted.length; i++) {
+      const file = accepted[i];
+      if (status) status.textContent = `Processing ${i + 1} of ${accepted.length}…`;
+
+      let mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+      let processedBlob = file;
+
+      if (mediaType === 'video') {
+        skippedVideo++;
+        continue;
+      }
+
+      // Inline HEIC conversion loop for bulk upload
+      if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        if (status) status.textContent = `Converting HEIC ${i + 1} of ${accepted.length}…`;
+        try {
+          const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.8 });
+          processedBlob = Array.isArray(converted) ? converted[0] : converted;
+          mediaType = 'image';
+        } catch (err) {
+          console.error("Failed to convert HEIC", file.name);
+          failedHeic++;
+          continue; // Skip file if we can't convert it
+        }
+      }
+
+      if (status) status.textContent = `Compressing ${i + 1} of ${accepted.length}…`;
+      processedBlob = await compressImageForLocalStorage(processedBlob);
+      if (status) status.textContent = cloudStore
+        ? `Uploading ${i + 1} of ${accepted.length}…`
+        : `Saving ${i + 1} of ${accepted.length}…`;
+      const storedMedia = await storeMediaBlob(processedBlob, file);
+      const mediaUrl = storedMedia.mediaUrl;
+      const nextMemory = {
+        id: makeId('mem'),
+        profile_id: currentProfile,
+        row_id: targetRowId,
+        title: titleFromFilename(file.name), // Uses original filename before conversion
+        subtitle: '',
+        date_label: '',
+        note: '',
+        emoji: mediaType === 'video' ? '🎬' : '📸',
+        gradient: GRADIENTS[localData.memories.length % GRADIENTS.length],
+        media_url: mediaUrl,
+        media_type: mediaType,
+        storage_path: storedMedia.storagePath || '',
+        is_featured: false,
+        is_featured_locked: false,
+        sort_order: localData.memories.filter(m => m.profile_id === currentProfile).length,
+      };
+
+      localData.memories.push(nextMemory);
+      if (!cloudStore) {
+        try {
+          await saveLocalDataAsync(localData);
+        } catch(err) {
+          localData.memories.pop();
+          skippedStorage++;
+          break;
+        }
+      }
+      successful++;
+    }
+
+    if (cloudStore && successful > 0) {
+      await saveLocalDataAsync(localData);
+    }
+    
+    let msg = `${successful} memor${successful === 1 ? 'y' : 'ies'} added ✓`;
+    if (skippedSize > 0) msg += ` (${skippedSize} too large)`;
+    if (failedHeic > 0) msg += ` (${failedHeic} HEIC failed)`;
+    if (skippedVideo > 0) msg += ` (${skippedVideo} video skipped)`;
+    if (skippedStorage > 0) msg += ' (storage full; export data before adding more)';
+    
+    showToast(msg, skippedStorage > 0 ? 'err' : 'ok');
+    await loadProfile(currentProfile);
+    loadAllCounts();
+  } catch(err) {
+    localData = originalData;
+    await saveLocalDataAsync(localData);
+    if (status) status.textContent = '';
+    showToast(storageErrorMessage(err), 'err');
+  }
+}
+
+async function compressImageForLocalStorage(file) {
+  const bitmap = await loadImageBitmap(file);
+  const maxSide = 1400;
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  if (bitmap.close) bitmap.close();
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.72));
+  if (!blob) throw new Error('Could not compress image');
+  return blob;
+}
+
+function loadImageBitmap(file) {
+  if (window.createImageBitmap) return createImageBitmap(file);
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not load image'));
+    };
+    img.src = url;
+  });
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = ev => resolve(ev.target.result);
+    reader.onerror = () => reject(new Error('Could not read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function titleFromFilename(name) {
+  return String(name || 'Memory')
+    .replace(/\.[^.]+$/, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, ch => ch.toUpperCase()) || 'Memory';
+}
+
+// ─────────────────────────────────────────────────
+//  GRADIENT SWATCHES
+// ─────────────────────────────────────────────────
+function buildGradientSwatches() {
+  const container = document.getElementById('gradSwatches');
+  container.innerHTML = '';
+  GRADIENTS.forEach((g, i) => {
+    const sw = document.createElement('div');
+    sw.className = 'grad-sw' + (i === 0 ? ' sel' : '');
+    sw.style.background = g;
+    sw.title = g;
+    sw.onclick = () => { selectedGradient = g; updateGradSwatches(); };
+    container.appendChild(sw);
+  });
+}
+
+function updateGradSwatches() {
+  document.querySelectorAll('.grad-sw').forEach((sw, i) => {
+    sw.classList.toggle('sel', GRADIENTS[i] === selectedGradient);
+  });
+}
+
+function populateRowSelect() {
+  const sel = document.getElementById('fRowId');
+  const profileRows = allRows.filter(r => r.profile_id === currentProfile);
+  sel.innerHTML = '<option value="">— No category —</option>';
+  profileRows.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id; opt.textContent = r.label;
+    sel.appendChild(opt);
+  });
+  if (currentRowIdForAdd) sel.value = currentRowIdForAdd;
+}
+
+// ─────────────────────────────────────────────────
+//  LOCAL DATA STORE
+// ─────────────────────────────────────────────────
+async function initCloudStore() {
+  const cfg = getFirebaseConfig();
+  if (!cfg) {
+    cloudStore = null;
+    return null;
+  }
+
+  const [firebaseApp, firestore, storage] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js'),
+    import('https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js'),
+  ]);
+
+  const app = firebaseApp.getApps().length ? firebaseApp.getApp() : firebaseApp.initializeApp(cfg);
+  cloudStore = {
+    cfg,
+    db: firestore.getFirestore(app),
+    storage: storage.getStorage(app),
+    firestore,
+    storageApi: storage,
+  };
+  return cloudStore;
+}
+
+function getFirebaseConfig() {
+  const cfg = window.MEMFLIX_FIREBASE_CONFIG || {};
+  if (!cfg.apiKey || !cfg.projectId || !cfg.storageBucket || !cfg.appId) return null;
+  return cfg;
+}
+
+async function loadLocalData(persistSeed=false) {
+  if (cloudStore) {
+    return loadCloudData();
+  }
+
+  const saved = localStorage.getItem('mf_local_data_v1');
+  if (saved) return normalizeLocalData(JSON.parse(saved));
+
+  let data = {};
+  try {
+    const res = await fetch('data/memflix-data.json', { cache: 'no-store' });
+    if (res.ok) data = await res.json();
+  } catch(e) {
+    // Direct file opens can block fetch; empty local data is still editable.
+  }
+
+  data = normalizeLocalData(data);
+  if (persistSeed) await saveLocalDataAsync(data);
+  return data;
+}
+
+function saveLocalData(data) {
+  if (cloudStore) {
+    saveCloudData(data);
+    return;
+  }
+
+  try {
+    localStorage.setItem('mf_local_data_v1', JSON.stringify(normalizeLocalData(data)));
+  } catch(err) {
+    throw new Error(storageErrorMessage(err));
+  }
+}
+
+async function loadCloudData() {
+  const { db, firestore } = cloudStore;
+  const [rowSnap, memSnap] = await Promise.all([
+    firestore.getDocs(firestore.collection(db, 'memory_rows')),
+    firestore.getDocs(firestore.collection(db, 'memories')),
+  ]);
+
+  return normalizeLocalData({
+    memory_rows: rowSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    memories: memSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+  });
+}
+
+async function saveCloudData(data) {
+  const normalized = normalizeLocalData(data);
+  await Promise.all([
+    syncCloudCollection('memory_rows', normalized.memory_rows),
+    syncCloudCollection('memories', normalized.memories),
+  ]);
+}
+
+async function syncCloudCollection(name, items) {
+  const { db, firestore } = cloudStore;
+  const col = firestore.collection(db, name);
+  const existing = await firestore.getDocs(col);
+  const nextIds = new Set(items.map(item => item.id));
+  const batch = firestore.writeBatch(db);
+
+  existing.docs.forEach(docSnap => {
+    if (!nextIds.has(docSnap.id)) {
+      batch.delete(firestore.doc(db, name, docSnap.id));
+    }
+  });
+
+  items.forEach(item => {
+    const { id, ...payload } = item;
+    batch.set(firestore.doc(db, name, id), payload);
+  });
+
+  await batch.commit();
+}
+
+async function storeMediaBlob(blob, originalFile) {
+  if (!cloudStore) {
+    return { mediaUrl: await readFileAsDataUrl(blob), storagePath: '' };
+  }
+
+  const { storage, storageApi } = cloudStore;
+  const ext = 'jpg';
+  const safeName = String(originalFile?.name || 'memory')
+    .replace(/\.[^.]+$/, '')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase() || 'memory';
+  const path = `memories/${currentProfile}/${Date.now()}-${Math.random().toString(16).slice(2)}-${safeName}.${ext}`;
+  const mediaRef = storageApi.ref(storage, path);
+  await storageApi.uploadBytes(mediaRef, blob, { contentType: 'image/jpeg' });
+  return {
+    mediaUrl: await storageApi.getDownloadURL(mediaRef),
+    storagePath: path,
+  };
+}
+
+async function deleteStoredMedia(memory) {
+  if (!cloudStore || !memory?.storage_path) return;
+  const { storage, storageApi } = cloudStore;
+  try {
+    await storageApi.deleteObject(storageApi.ref(storage, memory.storage_path));
+  } catch(err) {
+    console.warn('Could not delete stored media', err);
+  }
+}
+
+function saveLocalDataAsync(data) {
+  return cloudStore ? saveCloudData(data) : Promise.resolve(saveLocalData(data));
+}
+
+function storageErrorMessage(err) {
+  const raw = err && err.message ? err.message : String(err || '');
+  if (/quota|storage|exceeded/i.test(raw)) {
+    return 'Browser storage is full. Export your data, replace data/memflix-data.json, then clear/reset local data before adding more.';
+  }
+  return 'Could not save locally: ' + raw;
+}
+
+function normalizeLocalData(data) {
+  return {
+    memory_rows: Array.isArray(data.memory_rows) ? data.memory_rows : [],
+    memories: Array.isArray(data.memories) ? data.memories : [],
+  };
+}
+
+function bySortOrder(a, b) {
+  return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+}
+
+function makeId(prefix) {
+  if (window.crypto && window.crypto.randomUUID) return `${prefix}_${window.crypto.randomUUID()}`;
+  return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+// ─────────────────────────────────────────────────
+//  UTILITIES
+// ─────────────────────────────────────────────────
+function openMainApp() {
+  window.open('/', '_blank');
+}
+
+function exportLocalData() {
+  const blob = new Blob([JSON.stringify(normalizeLocalData(localData), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'memflix-data.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Local data exported', 'ok');
+}
+
+function showToast(msg, type='ok') {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

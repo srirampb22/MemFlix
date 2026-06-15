@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MemFlix — Our Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&display=swap" rel="stylesheet"/>
+<script src="firebase-config.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --red:#E50914; --red2:#b20710; --dark:#000; --card:#141414; --card2:#181818;
+  --text:#f5f5f5; --muted:#8c8c8c; --border:#262626;
+  --font:'Montserrat',sans-serif; --bebas:'Bebas Neue',sans-serif;
+}
+html,body{background:#000;color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;}
+
+/* ─── CONFIG SCREEN ──── */
+#cfg-screen{align-items:center;justify-content:center;padding:24px;background:#000;}
+.cfg-box{width:100%;max-width:420px;background:linear-gradient(180deg,#181818,#0d0d0d);border-radius:10px;padding:36px;border:1px solid #2a2a2a;box-shadow:0 28px 90px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.02) inset;}
+.cfg-logo{font-family:var(--bebas);font-size:40px;color:var(--red);letter-spacing:.05em;}
+.cfg-sub{font-size:12px;color:var(--muted);margin:4px 0 26px;letter-spacing:.5px;}
+.cfg-input{width:100%;background:#111;border:1px solid #333;color:var(--text);font-family:var(--font);font-size:13px;padding:11px 14px;border-radius:6px;outline:none;margin-bottom:12px;transition:border .2s,box-shadow .2s;}
+.cfg-input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,.18);}
+.cfg-btn{width:100%;background:var(--red);color:#fff;border:none;padding:13px;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:4px;}
+.cfg-btn:hover{background:var(--red2);box-shadow:0 10px 28px rgba(229,9,20,.28);}
+.cfg-hint{font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+
+/* ─── INTRO ──── */
+#intro{background:#000;align-items:center;justify-content:center;position:fixed;inset:0;z-index:999;flex-direction:column;gap:18px;overflow:hidden;}
+#intro::before{content:'';position:absolute;inset:-18%;background:radial-gradient(circle at 50% 48%,rgba(229,9,20,.12),rgba(229,9,20,.035) 18%,transparent 44%);opacity:0;animation:introBloom 3.1s ease both;}
+#intro::after{content:'';position:absolute;top:0;bottom:0;width:14vw;left:-20vw;background:linear-gradient(90deg,transparent,rgba(229,9,20,.18),rgba(255,255,255,.08),rgba(229,9,20,.14),transparent);filter:blur(14px);transform:skewX(-10deg);animation:introSweep 2.9s .35s cubic-bezier(.16,1,.3,1) both;}
+.intro-logo{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-family:var(--bebas);font-size:clamp(76px,15vw,152px);color:var(--red);letter-spacing:.035em;text-transform:uppercase;filter:drop-shadow(0 0 18px rgba(229,9,20,.34));animation:introLogoSettle 3.1s cubic-bezier(.16,1,.3,1) both;}
+.intro-logo span{display:inline-block;opacity:0;transform:scaleY(1.85) scaleX(.28);transform-origin:center;animation:introLetter 1.75s cubic-bezier(.16,1,.3,1) forwards;text-shadow:0 0 8px rgba(229,9,20,.55),0 0 30px rgba(229,9,20,.22);}
+.intro-logo span:nth-child(1){animation-delay:.08s}
+.intro-logo span:nth-child(2){animation-delay:.16s}
+.intro-logo span:nth-child(3){animation-delay:.24s}
+.intro-logo span:nth-child(4){animation-delay:.32s}
+.intro-logo span:nth-child(5){animation-delay:.46s}
+.intro-logo span:nth-child(6){animation-delay:.58s}
+.intro-logo span:nth-child(7){animation-delay:.7s}
+.intro-tagline{position:relative;z-index:1;font-size:12px;color:#6f6f6f;letter-spacing:5px;font-weight:500;animation:tagIn 1.2s 1.35s ease both;}
+.intro-light{position:relative;z-index:1;width:min(320px,64vw);height:1px;background:linear-gradient(90deg,transparent,rgba(229,9,20,.48),transparent);opacity:0;box-shadow:0 0 12px rgba(229,9,20,.32);animation:introLine 1.5s 1s ease both;}
+@keyframes introLetter{0%{opacity:0;transform:scaleY(2.2) scaleX(.12);filter:brightness(2.4) blur(3px)}48%{opacity:1;transform:scaleY(1.08) scaleX(1.08);filter:brightness(1.8) blur(0)}100%{opacity:1;transform:scaleY(1) scaleX(1);filter:brightness(1)}}
+@keyframes introLogoSettle{0%{transform:scale(1.16)}64%{transform:scale(1)}88%{transform:scale(1)}100%{transform:scale(1.06);opacity:.96}}
+@keyframes introBloom{0%{opacity:0;transform:scale(.7)}34%{opacity:1}76%{opacity:.64}100%{opacity:0;transform:scale(1.16)}}
+@keyframes introSweep{0%{left:-22vw;opacity:0}15%{opacity:1}70%{opacity:.88}100%{left:104vw;opacity:0}}
+@keyframes introLine{0%{opacity:0;transform:scaleX(.05)}35%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(.72)}}
+@keyframes tagIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── PROFILE SCREEN ──── */
+#profiles{flex-direction:column;align-items:center;justify-content:center;gap:48px;padding:40px 24px;position:relative;background:linear-gradient(180deg,#060606 0%,#000 45%,#000 100%);}
+.profiles-logo{position:absolute;top:24px;left:32px;font-family:var(--bebas);font-size:32px;color:var(--red);letter-spacing:.05em;cursor:pointer;text-shadow:0 0 22px rgba(229,9,20,.45);}
+.profiles-title{font-weight:300;font-size:clamp(20px,4vw,34px);letter-spacing:5px;color:#e5e5e5;}
+.profile-grid{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;}
+.profile-card{display:flex;flex-direction:column;align-items:center;gap:14px;cursor:pointer;transition:transform .28s cubic-bezier(.16,1,.3,1),filter .28s;}
+.profile-card:hover{transform:scale(1.1) translateY(-4px);filter:brightness(1.08);}
+.profile-avatar{width:148px;height:148px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:58px;border:3px solid rgba(255,255,255,.08);transition:border .2s,box-shadow .25s,filter .25s;overflow:hidden;box-shadow:0 18px 55px rgba(0,0,0,.8);}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;}
+.profile-card:hover .profile-avatar{border:3px solid #fff;box-shadow:0 18px 70px rgba(0,0,0,.9),0 0 34px rgba(255,255,255,.26),0 0 54px rgba(229,9,20,.18);}
+.profile-name{font-size:13px;font-weight:600;letter-spacing:2.5px;color:var(--muted);transition:color .2s;}
+.profile-card:hover .profile-name{color:#fff;}
+
+/* ─── BROWSE ──── */
+#browse{flex-direction:column;position:relative;background:#000;}
+.navbar{position:sticky;top:0;z-index:100;background:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.96) 58%,rgba(0,0,0,.18) 100%);padding:18px 4% 30px;display:flex;align-items:center;gap:36px;border-bottom:1px solid rgba(255,255,255,.03);backdrop-filter:blur(12px);}
+.nav-logo{font-family:var(--bebas);font-size:30px;color:var(--red);letter-spacing:.05em;cursor:pointer;flex-shrink:0;text-shadow:0 0 22px rgba(229,9,20,.45);}
+.nav-links{display:flex;gap:20px;}
+.nav-link{font-size:13px;color:rgba(255,255,255,.65);cursor:pointer;transition:color .2s,text-shadow .2s;white-space:nowrap;}
+.nav-link:hover,.nav-link.active{color:#fff;}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.nav-search{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;transition:color .15s,text-shadow .15s;}
+.nav-search:hover{color:#fff;text-shadow:0 0 16px rgba(255,255,255,.45);}
+.nav-profile{display:flex;align-items:center;gap:9px;cursor:pointer;}
+.nav-profile-avatar{width:32px;height:32px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;}
+.nav-profile-avatar img{width:100%;height:100%;object-fit:cover;}
+.nav-profile-name{font-size:13px;color:rgba(255,255,255,.7);}
+
+/* ─── HERO ──── */
+.hero{height:clamp(420px,62vh,600px);position:relative;overflow:hidden;margin-top:-80px;cursor:pointer;background:#000;box-shadow:0 40px 100px rgba(0,0,0,.82);}
+.hero-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.hero-emoji-bg{position:absolute;right:8%;top:50%;transform:translateY(-50%);font-size:clamp(100px,20vw,220px);opacity:.15;user-select:none;pointer-events:none;line-height:1;}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,#000 0%,rgba(0,0,0,.92) 28%,rgba(0,0,0,.28) 72%,rgba(0,0,0,.66) 100%),linear-gradient(to top,#000 0%,rgba(0,0,0,.72) 22%,rgba(0,0,0,.08) 60%),linear-gradient(to bottom,rgba(0,0,0,.62),transparent 30%);}
+.hero-content{position:absolute;bottom:0;left:0;right:0;padding:0 4% 52px;}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:3px;margin-bottom:14px;text-transform:uppercase;}
+.hero-title{font-family:var(--bebas);font-size:clamp(42px,7vw,92px);line-height:1;color:#fff;letter-spacing:.03em;margin-bottom:10px;text-shadow:0 5px 26px rgba(0,0,0,.95);}
+.hero-sub{font-size:clamp(13px,1.8vw,16px);color:rgba(255,255,255,.72);font-weight:300;max-width:520px;margin-bottom:22px;line-height:1.55;}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-primary{background:#fff;color:#000;border:none;padding:10px 28px;border-radius:4px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:8px;transition:background .15s,transform .15s,box-shadow .15s;}
+.btn-primary:hover{background:#ffffffd8;transform:translateY(-1px);box-shadow:0 12px 30px rgba(255,255,255,.16);}
+.btn-secondary{background:rgba(109,109,110,.68);color:#fff;border:none;padding:10px 26px;border-radius:4px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);transition:background .15s,transform .15s,box-shadow .15s;backdrop-filter:blur(10px);}
+.btn-secondary:hover{background:rgba(109,109,110,.92);transform:translateY(-1px);box-shadow:0 12px 30px rgba(0,0,0,.5);}
+
+/* ─── SEARCH BAR ──── */
+.search-bar-wrap{padding:20px 4% 0;display:none;}
+.search-bar-wrap.open{display:block;}
+.search-input{width:100%;max-width:480px;background:rgba(255,255,255,.07);border:1px solid #333;color:#fff;font-family:var(--font);font-size:14px;padding:11px 16px;border-radius:8px;outline:none;transition:border .2s;}
+.search-input:focus{border-color:var(--red);}
+.search-results-label{font-size:13px;color:var(--muted);margin:14px 0 8px;padding:0 4%;}
+
+/* ─── ROWS ──── */
+.rows-container{padding:8px 0 100px;background:#000;}
+.row-section{margin-bottom:38px;}
+.row-label{font-size:16px;font-weight:700;color:#e5e5e5;margin:0 0 12px;padding:0 4%;letter-spacing:.3px;}
+.row-scroll{display:flex;gap:8px;overflow-x:auto;padding:8px 4%;scrollbar-width:none;-ms-overflow-style:none;}
+.row-scroll::-webkit-scrollbar{display:none;}
+
+/* ─── MEMORY CARD ──── */
+.memory-card{flex:0 0 auto;width:clamp(148px,18vw,198px);height:clamp(88px,11vw,118px);border-radius:4px;position:relative;cursor:pointer;overflow:hidden;transition:transform .28s cubic-bezier(.16,1,.3,1),box-shadow .28s,filter .28s;flex-shrink:0;background:#111;border:1px solid rgba(255,255,255,.035);box-shadow:0 8px 24px rgba(0,0,0,.72);}
+.memory-card::after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 0%,rgba(255,255,255,.12) 45%,transparent 62%);opacity:0;transform:translateX(-60%);transition:opacity .25s,transform .35s;pointer-events:none;}
+.memory-card:hover{transform:scale(1.12) translateY(-7px);box-shadow:0 22px 55px rgba(0,0,0,.92),0 0 0 1px rgba(255,255,255,.18),0 0 38px rgba(229,9,20,.16);filter:brightness(1.12);z-index:20;}
+.memory-card:hover::after{opacity:1;transform:translateX(55%);}
+.card-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.card-emoji{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:30px;transition:opacity .25s,transform .25s;pointer-events:none;}
+.memory-card:hover .card-emoji{opacity:0;transform:translate(-50%,-60%);}
+.card-hover-overlay{position:absolute;inset:0;background:linear-gradient(to top,#000 0%,rgba(0,0,0,.78) 38%,rgba(0,0,0,.08) 100%);opacity:0;transition:opacity .25s;display:flex;flex-direction:column;justify-content:flex-end;padding:9px 10px 11px;}
+.memory-card:hover .card-hover-overlay{opacity:1;}
+.card-title{font-size:12px;font-weight:700;color:#fff;line-height:1.3;}
+.card-date{font-size:10px;color:rgba(255,255,255,.55);margin-top:2px;}
+
+/* ─── LOADING SKELETON ──── */
+.skeleton-card{flex:0 0 auto;width:clamp(148px,18vw,198px);height:clamp(88px,11vw,118px);border-radius:4px;background:linear-gradient(90deg,#0f0f0f 25%,#1d1d1d 50%,#0f0f0f 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+
+/* ─── MODAL ──── */
+#modal-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.94);align-items:center;justify-content:center;padding:24px;overflow-y:auto;backdrop-filter:blur(8px);}
+#modal-overlay.open{display:flex;}
+.modal-box{width:100%;max-width:560px;border-radius:8px;overflow:hidden;background:#141414;border:1px solid rgba(255,255,255,.08);box-shadow:0 36px 120px rgba(0,0,0,.96),0 0 70px rgba(229,9,20,.12);animation:modalIn .3s cubic-bezier(.16,1,.3,1);margin:auto;}
+@keyframes modalIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-banner{height:240px;display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;overflow:hidden;}
+.modal-banner-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.modal-banner-emoji{position:relative;z-index:1;font-size:72px;}
+.modal-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.76);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background .15s,box-shadow .15s;}
+.modal-close:hover{background:rgba(0,0,0,.95);box-shadow:0 0 22px rgba(255,255,255,.18);}
+.modal-body{padding:24px 28px 32px;}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:12px;}
+.modal-title{font-size:24px;font-weight:800;color:#fff;line-height:1.2;}
+.modal-date-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;letter-spacing:1.5px;padding:4px 10px;border-radius:3px;flex-shrink:0;margin-top:5px;text-transform:uppercase;white-space:nowrap;}
+.modal-meta-date{font-size:12px;color:var(--muted);margin-bottom:14px;}
+.modal-note{font-size:14px;line-height:1.85;color:#bbb;font-weight:300;font-style:italic;border-left:3px solid var(--red);padding-left:14px;}
+.modal-actions{margin-top:22px;display:flex;gap:10px;}
+.modal-btn-primary{flex:1;padding:12px 0;background:#fff;color:#000;border:none;border-radius:5px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;}
+.modal-btn-primary:hover{background:#ffffffcc;}
+.modal-btn-heart{padding:12px 18px;background:rgba(109,109,110,.45);color:#fff;border:none;border-radius:5px;font-size:15px;cursor:pointer;font-family:var(--font);transition:background .15s;}
+.modal-btn-heart:hover,.modal-btn-heart.liked{background:rgba(229,9,20,.5);color:#fff;}
+
+/* ─── SLIDESHOW ──── */
+#slideshow-overlay{display:none;position:fixed;inset:0;z-index:800;background:#000;flex-direction:column;align-items:center;justify-content:center;}
+#slideshow-overlay.open{display:flex;}
+.slide-media-wrap{width:100%;height:100%;position:relative;}
+.slide-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.35) blur(12px);transform:scale(1.08);}
+.slide-main{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
+.slide-emoji-full{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:clamp(80px,18vw,160px);}
+.slide-info{position:absolute;bottom:0;left:0;right:0;padding:24px 5% 40px;background:linear-gradient(to top,rgba(0,0,0,.85),transparent);}
+.slide-title{font-family:var(--bebas);font-size:clamp(32px,5vw,56px);letter-spacing:.03em;color:#fff;margin-bottom:6px;}
+.slide-note{font-size:14px;color:rgba(255,255,255,.65);font-style:italic;max-width:600px;line-height:1.6;}
+.slide-controls{position:absolute;top:16px;right:16px;display:flex;gap:10px;}
+.slide-btn{background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);color:#fff;width:38px;height:38px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.slide-btn:hover{background:rgba(0,0,0,.9);}
+.slide-counter{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:12px;color:rgba(255,255,255,.5);letter-spacing:2px;}
+.slide-nav{position:absolute;top:50%;transform:translateY(-50%);display:flex;width:100%;justify-content:space-between;padding:0 12px;pointer-events:none;}
+.slide-nav-btn{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.1);color:#fff;width:44px;height:44px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;pointer-events:all;}
+.slide-nav-btn:hover{background:rgba(0,0,0,.88);}
+
+/* ─── EMPTY ──── */
+.empty-row{font-size:13px;color:#444;padding:18px 0;font-style:italic;}
+.empty-profile{text-align:center;padding:80px 24px;color:var(--muted);}
+.empty-profile .e-icon{font-size:48px;margin-bottom:14px;}
+.empty-profile p{font-size:14px;line-height:1.7;}
+
+/* ─── RESPONSIVE ──── */
+@media(max-width:600px){
+  .nav-links{display:none;}
+  .profile-avatar{width:100px;height:100px;font-size:40px;}
+  .profile-grid{gap:14px;}
+  .modal-banner{height:180px;}
+  .modal-banner-emoji{font-size:52px;}
+}
+</style>
+</head>
+<body>
+
+<!-- CONFIG -->
+<div id="cfg-screen" class="screen">
+  <div class="cfg-box">
+    <div class="cfg-logo">MemFlix</div>
+    <p class="cfg-sub">Local memory data is loaded from this browser</p>
+    <p class="cfg-hint">No Supabase or Cloudinary connection is required.<br/>Use the Admin panel to add local memories.</p>
+    <input id="cfgUrl" class="cfg-input" type="text" placeholder="Local mode" disabled/>
+    <input id="cfgKey" class="cfg-input" type="text" placeholder="No API key needed" disabled/>
+    <button class="cfg-btn" onclick="saveConfig()">Open MemFlix ▶</button>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div id="intro" class="screen">
+  <div class="intro-logo" aria-label="MemFlix">
+    <span>M</span><span>e</span><span>m</span><span>F</span><span>l</span><span>i</span><span>x</span>
+  </div>
+  <div class="intro-tagline">A LOVE STORY. YOUR STORY.</div>
+  <div class="intro-light"></div>
+</div>
+
+<!-- PROFILES -->
+<div id="profiles" class="screen">
+  <div class="profiles-logo" onclick="showProfiles()">MemFlix</div>
+  <h1 class="profiles-title">Who's Watching?</h1>
+  <div class="profile-grid" id="profileGrid"></div>
+</div>
+
+<!-- BROWSE -->
+<div id="browse" class="screen" style="flex-direction:column;">
+  <nav class="navbar">
+    <span class="nav-logo" onclick="showProfiles()">MemFlix</span>
+    <div class="nav-links">
+      <span class="nav-link active" onclick="filterRows('all')">Home</span>
+      <span class="nav-link" id="tabMemories" onclick="filterRows('memories')">Memories</span>
+      <span class="nav-link" id="tabPhotos" onclick="filterRows('photos')">Photos</span>
+      <span class="nav-link" id="tabVideos" onclick="filterRows('videos')">Videos</span>
+    </div>
+    <div class="nav-right">
+      <button class="nav-search" onclick="toggleSearch()" title="Search">🔍</button>
+      <div class="nav-profile" onclick="showProfiles()">
+        <div class="nav-profile-avatar" id="navAvatar"></div>
+        <span class="nav-profile-name" id="navName"></span>
+      </div>
+    </div>
+  </nav>
+  <div class="search-bar-wrap" id="searchBarWrap">
+    <input id="searchInput" class="search-input" type="text" placeholder="Search memories…" oninput="doSearch(this.value)"/>
+  </div>
+  <div class="hero" id="heroSection">
+    <div class="hero-emoji-bg" id="heroBigEmoji"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-tag">⭐ Featured Memory</div>
+      <div class="hero-title" id="heroTitle">Loading…</div>
+      <div class="hero-sub" id="heroSub"></div>
+      <div class="hero-btns">
+        <button class="btn-primary" id="heroPlayBtn">▶ Open Memory</button>
+        <button class="btn-secondary" id="heroInfoBtn">ℹ More Info</button>
+      </div>
+    </div>
+  </div>
+  <div class="rows-container" id="rowsContainer"></div>
+</div>
+
+<!-- MEMORY MODAL -->
+<div id="modal-overlay" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-banner" id="modalBanner">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <span class="modal-banner-emoji" id="modalEmoji"></span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-date-badge">Memory</div>
+      </div>
+      <div class="modal-meta-date" id="modalMetaDate"></div>
+      <p class="modal-note" id="modalNote"></p>
+      <div class="modal-actions">
+        <button class="modal-btn-primary" id="modalPlayBtn">▶ Play Memory</button>
+        <button class="modal-btn-heart" id="heartBtn" onclick="toggleHeart()">♡</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDESHOW -->
+<div id="slideshow-overlay">
+  <div class="slide-media-wrap" id="slideMediaWrap"></div>
+  <div class="slide-counter" id="slideCounter"></div>
+  <div class="slide-controls">
+    <button class="slide-btn" onclick="closeSlideshow()" title="Close">✕</button>
+    <button class="slide-btn" onclick="toggleAutoplay()" id="autoplayBtn" title="Pause">⏸</button>
+  </div>
+  <div class="slide-nav">
+    <button class="slide-nav-btn" onclick="slidePrev()">‹</button>
+    <button class="slide-nav-btn" onclick="slideNext()">›</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────
+//  PROFILE CONFIG
+// ─────────────────────────────────────────────────────
+const PROFILES = [
+  { id:'her', name:'Samriti',   emoji:'👸', gradient:'linear-gradient(135deg,#f093fb,#f5576c)', accent:'#f5576c' },
+  { id:'us',  name:'Us ❤️',     emoji:'💑', gradient:'linear-gradient(135deg,#E50914,#ff6b6b)', accent:'#E50914' },
+  { id:'me',  name:'Ram',       emoji:'🧑‍💻', gradient:'linear-gradient(135deg,#4facfe,#00f2fe)', accent:'#4facfe' },
+];
+// ↑ Change name values above to personalise profile names
+
+// ─────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────
+let localData = null;
+let activeProfile = null;
+let allMemories = [], allRows = [];
+let currentMemory = null;
+let likedMemories = new Set(JSON.parse(localStorage.getItem('mf_liked')||'[]'));
+let cloudStore = null;
+
+// slideshow
+let slideItems = [], slideIndex = 0, slideTimer = null;
+let autoplayOn = true;
+
+// ─────────────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────────────
+function saveConfig() {
+  startApp();
+}
+
+async function startApp() {
+  try {
+    await initCloudStore();
+    localData = await loadLocalData();
+    showIntro();
+  } catch(err) {
+    cloudStore = null;
+    console.error(err);
+    show('cfg-screen');
+    const hint = document.querySelector('.cfg-hint');
+    if (hint) {
+      hint.textContent = 'Startup error: ' + (err?.message || err) + '. Check Firebase rules/config, or use the deployed Vercel URL.';
+      hint.style.color = '#ff6b6b';
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────
+//  SCREEN HELPERS
+// ─────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+// ─────────────────────────────────────────────────────
+//  INTRO
+// ─────────────────────────────────────────────────────
+function showIntro() {
+  show('intro');
+  setTimeout(() => {
+    const el = document.getElementById('intro');
+    el.style.transition = 'opacity .8s ease';
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.classList.remove('active');
+      el.style.opacity = '';
+      buildProfiles();
+      show('profiles');
+    }, 800);
+  }, 3300);
+}
+
+// ─────────────────────────────────────────────────────
+//  PROFILES
+// ─────────────────────────────────────────────────────
+function buildProfiles() {
+  const grid = document.getElementById('profileGrid');
+  grid.innerHTML = '';
+  PROFILES.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'profile-card';
+    card.innerHTML = `
+      <div class="profile-avatar" style="background:${p.gradient}"
+           onmouseenter="this.style.boxShadow='0 0 28px ${p.accent}88'"
+           onmouseleave="this.style.boxShadow='none'">
+        <span>${p.emoji}</span>
+      </div>
+      <span class="profile-name">${p.name}</span>`;
+    card.onclick = () => selectProfile(p);
+    grid.appendChild(card);
+  });
+}
+
+function showProfiles() { show('profiles'); }
+
+function selectProfile(p) {
+  activeProfile = p;
+  const nav = document.getElementById('navAvatar');
+  nav.style.background = p.gradient;
+  nav.innerHTML = `<span>${p.emoji}</span>`;
+  document.getElementById('navName').textContent = p.name;
+  loadBrowse(p.id);
+}
+
+// ─────────────────────────────────────────────────────
+//  BROWSE — Load from local data
+// ─────────────────────────────────────────────────────
+async function loadBrowse(profileId) {
+  show('browse');
+  document.getElementById('heroTitle').textContent = 'Loading…';
+  document.getElementById('heroSub').textContent = '';
+  renderSkeletonRows();
+
+  try {
+    localData = await loadLocalData();
+    allRows = localData.memory_rows
+      .filter(r => r.profile_id === profileId)
+      .sort(bySortOrder);
+    allMemories = localData.memories
+      .filter(m => m.profile_id === profileId)
+      .sort(bySortOrder);
+    renderHero();
+    renderRows(allRows, allMemories);
+  } catch(e) {
+    document.getElementById('heroTitle').textContent = 'Could not load';
+    document.getElementById('heroSub').textContent = e.message;
+    document.getElementById('rowsContainer').innerHTML = '';
+  }
+}
+
+// ─────────────────────────────────────────────────────
+//  HERO
+// ─────────────────────────────────────────────────────
+function renderHero() {
+  const featured = allMemories.find(m => m.is_featured_locked) || allMemories.find(m => m.is_featured) || allMemories[0];
+  if (!featured) {
+    document.getElementById('heroTitle').textContent = activeProfile.name;
+    document.getElementById('heroSub').textContent = 'No memories yet — add some in the Admin panel!';
+    document.getElementById('heroSection').style.background = activeProfile.gradient;
+    document.getElementById('heroBigEmoji').textContent = activeProfile.emoji;
+    return;
+  }
+  currentMemory = featured;
+  const hero = document.getElementById('heroSection');
+
+  // Remove old media
+  hero.querySelectorAll('.hero-media').forEach(e => e.remove());
+
+  if (featured.media_url) {
+    hero.style.background = '#000';
+    document.getElementById('heroBigEmoji').textContent = '';
+    const mediaEl = featured.media_type === 'video'
+      ? Object.assign(document.createElement('video'), { src: featured.media_url, autoplay: true, muted: true, loop: true, className: 'hero-media' })
+      : Object.assign(document.createElement('img'), { src: featured.media_url, className: 'hero-media', alt: featured.title });
+    mediaEl.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+    hero.insertBefore(mediaEl, hero.firstChild);
+  } else {
+    hero.style.background = featured.gradient;
+    document.getElementById('heroBigEmoji').textContent = featured.emoji;
+  }
+
+  document.getElementById('heroTitle').textContent = featured.title;
+  document.getElementById('heroSub').textContent = featured.subtitle || '';
+  document.getElementById('heroPlayBtn').onclick = () => openModal(featured);
+  document.getElementById('heroInfoBtn').onclick = () => openModal(featured);
+}
+
+// ─────────────────────────────────────────────────────
+//  ROWS
+// ─────────────────────────────────────────────────────
+function renderSkeletonRows() {
+  const c = document.getElementById('rowsContainer');
+  c.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const row = document.createElement('div');
+    row.className = 'row-section';
+    row.innerHTML = `<div class="row-label" style="background:#2a2a2a;width:200px;height:16px;border-radius:4px;margin-bottom:14px;"></div><div class="row-scroll">${'<div class="skeleton-card"></div>'.repeat(6)}</div>`;
+    c.appendChild(row);
+  }
+}
+
+function renderRows(rows, memories) {
+  const c = document.getElementById('rowsContainer');
+  c.innerHTML = '';
+
+  if (rows.length === 0 && memories.length === 0) {
+    c.innerHTML = `<div class="empty-profile"><div class="e-icon">${activeProfile.emoji}</div><p>No memories yet.<br/>Open the Admin panel to start adding photos, videos and notes!</p></div>`;
+    return;
+  }
+
+  rows.forEach(row => {
+    const mems = memories.filter(m => m.row_id === row.id);
+    if (mems.length === 0) return;
+    const sec = document.createElement('div');
+    sec.className = 'row-section';
+    sec.innerHTML = `<div class="row-label">${escHtml(row.label)}</div><div class="row-scroll" id="scroll-${row.id}"></div>`;
+    c.appendChild(sec);
+    const scroll = sec.querySelector('.row-scroll');
+    mems.forEach(m => scroll.appendChild(makeMemCard(m)));
+  });
+
+  // Unassigned
+  const unassigned = memories.filter(m => !m.row_id);
+  if (unassigned.length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'row-section';
+    sec.innerHTML = `<div class="row-label">More Memories ✨</div><div class="row-scroll" id="scroll-unassigned"></div>`;
+    c.appendChild(sec);
+    const scroll = sec.querySelector('.row-scroll');
+    unassigned.forEach(m => scroll.appendChild(makeMemCard(m)));
+  }
+
+  // Special Play All button
+  if (memories.length > 1) {
+    const strip = document.createElement('div');
+    strip.style.cssText = 'padding:0 4% 20px;';
+    strip.innerHTML = `<button onclick="startSlideshow()" style="background:transparent;border:1px solid #333;color:#aaa;padding:12px 26px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:9px;transition:all .15s;" onmouseover="this.style.borderColor='#666';this.style.color='#fff'" onmouseout="this.style.borderColor='#333';this.style.color='#aaa'">✨ Play All Memories Slideshow</button>`;
+    c.appendChild(strip);
+  }
+}
+
+function makeMemCard(m) {
+  const card = document.createElement('div');
+  card.className = 'memory-card';
+  card.style.background = m.gradient;
+
+  if (m.media_url) {
+    if (m.media_type === 'video') {
+      card.innerHTML = `<video class="card-media" src="${m.media_url}" muted playsinline preload="metadata"></video>`;
+    } else {
+      card.innerHTML = `<img class="card-media" src="${m.media_url}" alt="${escHtml(m.title)}" loading="lazy"/>`;
+    }
+  } else {
+    card.innerHTML = `<div class="card-emoji">${m.emoji || '📸'}</div>`;
+  }
+
+  card.innerHTML += `
+    <div class="card-hover-overlay">
+      <div class="card-title">${escHtml(m.title)}</div>
+      ${m.date_label ? `<div class="card-date">${escHtml(m.date_label)}</div>` : ''}
+    </div>`;
+
+  card.onclick = () => openModal(m);
+  return card;
+}
+
+// ─────────────────────────────────────────────────────
+//  MODAL
+// ─────────────────────────────────────────────────────
+function openModal(m) {
+  currentMemory = m;
+  const banner = document.getElementById('modalBanner');
+
+  // Clear old media
+  banner.querySelectorAll('.modal-banner-media').forEach(e => e.remove());
+  document.getElementById('modalEmoji').style.display = '';
+
+  if (m.media_url) {
+    document.getElementById('modalEmoji').style.display = 'none';
+    banner.style.background = '#000';
+    if (m.media_type === 'video') {
+      const vid = document.createElement('video');
+      vid.src = m.media_url; vid.controls = true; vid.autoplay = true;
+      vid.className = 'modal-banner-media';
+      vid.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+      banner.appendChild(vid);
+    } else {
+      const img = document.createElement('img');
+      img.src = m.media_url; img.className = 'modal-banner-media';
+      img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+      banner.appendChild(img);
+    }
+  } else {
+    banner.style.background = m.gradient;
+    document.getElementById('modalEmoji').textContent = m.emoji || '📸';
+  }
+
+  document.getElementById('modalTitle').textContent = m.title;
+  document.getElementById('modalMetaDate').textContent = m.date_label || '';
+  document.getElementById('modalNote').textContent = m.note ? `"${m.note}"` : '';
+
+  // Heart state
+  const liked = likedMemories.has(m.id);
+  const hb = document.getElementById('heartBtn');
+  hb.textContent = liked ? '♥' : '♡';
+  hb.classList.toggle('liked', liked);
+
+  document.getElementById('modalPlayBtn').onclick = () => {
+    if (m.media_url && m.media_type === 'video') {
+      banner.querySelector('video')?.play();
+    } else {
+      closeModal();
+      startSlideshow([m]);
+    }
+  };
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.remove('open');
+  overlay.querySelectorAll('video').forEach(v => { v.pause(); v.src = ''; });
+}
+
+function toggleHeart() {
+  if (!currentMemory) return;
+  const id = currentMemory.id;
+  if (likedMemories.has(id)) { likedMemories.delete(id); } else { likedMemories.add(id); }
+  localStorage.setItem('mf_liked', JSON.stringify([...likedMemories]));
+  const liked = likedMemories.has(id);
+  const hb = document.getElementById('heartBtn');
+  hb.textContent = liked ? '♥' : '♡';
+  hb.classList.toggle('liked', liked);
+}
+
+// ─────────────────────────────────────────────────────
+//  SEARCH
+// ─────────────────────────────────────────────────────
+function toggleSearch() {
+  const wrap = document.getElementById('searchBarWrap');
+  const open = wrap.classList.toggle('open');
+  if (open) { document.getElementById('searchInput').focus(); doSearch(''); }
+  else { doSearch(''); }
+}
+
+function doSearch(q) {
+  q = q.toLowerCase().trim();
+  const container = document.getElementById('rowsContainer');
+  if (!q) { renderRows(allRows, allMemories); return; }
+  const filtered = allMemories.filter(m =>
+    m.title.toLowerCase().includes(q) ||
+    (m.note||'').toLowerCase().includes(q) ||
+    (m.date_label||'').toLowerCase().includes(q)
+  );
+  container.innerHTML = '';
+  if (filtered.length === 0) {
+    container.innerHTML = `<p class="search-results-label">No memories found for "${escHtml(q)}"</p>`;
+    return;
+  }
+  container.innerHTML = `<p class="search-results-label">${filtered.length} memor${filtered.length===1?'y':'ies'} found</p>`;
+  const sec = document.createElement('div');
+  sec.className = 'row-section';
+  const scroll = document.createElement('div');
+  scroll.className = 'row-scroll';
+  filtered.forEach(m => scroll.appendChild(makeMemCard(m)));
+  sec.appendChild(scroll);
+  container.appendChild(sec);
+}
+
+function filterRows(type) {
+  const container = document.getElementById('rowsContainer');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  event.target.classList.add('active');
+
+  if (type === 'all') { renderRows(allRows, allMemories); return; }
+
+  const filtered = type === 'photos'
+    ? allMemories.filter(m => m.media_type === 'image')
+    : type === 'videos'
+    ? allMemories.filter(m => m.media_type === 'video')
+    : allMemories;
+
+  container.innerHTML = '';
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-profile"><div class="e-icon">📭</div><p>No ${type} added yet.</p></div>`;
+    return;
+  }
+  const sec = document.createElement('div');
+  sec.className = 'row-section';
+  sec.innerHTML = `<div class="row-label">${type.charAt(0).toUpperCase()+type.slice(1)}</div>`;
+  const scroll = document.createElement('div');
+  scroll.className = 'row-scroll';
+  filtered.forEach(m => scroll.appendChild(makeMemCard(m)));
+  sec.appendChild(scroll);
+  container.appendChild(sec);
+}
+
+// ─────────────────────────────────────────────────────
+//  SLIDESHOW
+// ─────────────────────────────────────────────────────
+function startSlideshow(items) {
+  slideItems = items || allMemories;
+  if (slideItems.length === 0) return;
+  slideIndex = 0;
+  autoplayOn = true;
+  document.getElementById('autoplayBtn').textContent = '⏸';
+  document.getElementById('slideshow-overlay').classList.add('open');
+  renderSlide();
+  startAutoplay();
+}
+
+function renderSlide() {
+  const m = slideItems[slideIndex];
+  const wrap = document.getElementById('slideMediaWrap');
+  wrap.innerHTML = '';
+
+  if (m.media_url) {
+    if (m.media_type === 'video') {
+      const vid = document.createElement('video');
+      vid.src = m.media_url; vid.autoplay = true; vid.muted = true; vid.loop = true;
+      vid.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;';
+      wrap.appendChild(vid);
+    } else {
+      const bg = document.createElement('img');
+      bg.src = m.media_url; bg.className = 'slide-bg'; wrap.appendChild(bg);
+      const main = document.createElement('img');
+      main.src = m.media_url; main.className = 'slide-main'; main.alt = m.title;
+      wrap.appendChild(main);
+    }
+  } else {
+    wrap.style.background = m.gradient;
+    const emoji = document.createElement('div');
+    emoji.className = 'slide-emoji-full'; emoji.textContent = m.emoji || '📸';
+    wrap.appendChild(emoji);
+  }
+
+  // Info panel
+  const info = document.createElement('div');
+  info.className = 'slide-info';
+  info.innerHTML = `<div class="slide-title">${escHtml(m.title)}${m.date_label ? ` <span style="font-size:.5em;opacity:.6">${escHtml(m.date_label)}</span>` : ''}</div>${m.note ? `<div class="slide-note">"${escHtml(m.note)}"</div>` : ''}`;
+  wrap.appendChild(info);
+
+  document.getElementById('slideCounter').textContent = `${slideIndex+1} / ${slideItems.length}`;
+}
+
+function slideNext() { slideIndex = (slideIndex+1) % slideItems.length; renderSlide(); }
+function slidePrev() { slideIndex = (slideIndex-1+slideItems.length) % slideItems.length; renderSlide(); }
+
+function startAutoplay() {
+  clearInterval(slideTimer);
+  if (autoplayOn) slideTimer = setInterval(slideNext, 4000);
+}
+
+function toggleAutoplay() {
+  autoplayOn = !autoplayOn;
+  document.getElementById('autoplayBtn').textContent = autoplayOn ? '⏸' : '▶';
+  startAutoplay();
+}
+
+function closeSlideshow() {
+  clearInterval(slideTimer);
+  document.getElementById('slideshow-overlay').classList.remove('open');
+  document.getElementById('slideMediaWrap').innerHTML = '';
+}
+
+// ─────────────────────────────────────────────────────
+//  KEYBOARD SHORTCUTS
+// ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const ss = document.getElementById('slideshow-overlay').classList.contains('open');
+  if (ss) {
+    if (e.key === 'ArrowRight') slideNext();
+    if (e.key === 'ArrowLeft') slidePrev();
+    if (e.key === 'Escape') closeSlideshow();
+    return;
+  }
+  if (e.key === 'Escape') closeModal();
+});
+
+// ─────────────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function bySortOrder(a, b) {
+  return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+}
+
+async function loadLocalData() {
+  if (cloudStore) {
+    return loadCloudData();
+  }
+
+  const saved = localStorage.getItem('mf_local_data_v1');
+  if (saved) return normalizeLocalData(JSON.parse(saved));
+
+  try {
+    const res = await fetch('data/memflix-data.json', { cache: 'no-store' });
+    if (res.ok) return normalizeLocalData(await res.json());
+  } catch(e) {
+    // Direct file opens can block fetch; the app still works with empty local data.
+  }
+
+  return normalizeLocalData({});
+}
+
+async function initCloudStore() {
+  const cfg = getFirebaseConfig();
+  if (!cfg) {
+    cloudStore = null;
+    return null;
+  }
+
+  const [firebaseApp, firestore] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js'),
+  ]);
+
+  const app = firebaseApp.getApps().length ? firebaseApp.getApp() : firebaseApp.initializeApp(cfg);
+  cloudStore = {
+    db: firestore.getFirestore(app),
+    firestore,
+  };
+  return cloudStore;
+}
+
+function getFirebaseConfig() {
+  const cfg = window.MEMFLIX_FIREBASE_CONFIG || {};
+  if (!cfg.apiKey || !cfg.projectId || !cfg.storageBucket || !cfg.appId) return null;
+  return cfg;
+}
+
+async function loadCloudData() {
+  const { db, firestore } = cloudStore;
+  const [rowSnap, memSnap] = await Promise.all([
+    firestore.getDocs(firestore.collection(db, 'memory_rows')),
+    firestore.getDocs(firestore.collection(db, 'memories')),
+  ]);
+
+  return normalizeLocalData({
+    memory_rows: rowSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    memories: memSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+  });
+}
+
+function normalizeLocalData(data) {
+  return {
+    memory_rows: Array.isArray(data.memory_rows) ? data.memory_rows : [],
+    memories: Array.isArray(data.memories) ? data.memories : [],
+  };
+}
+
+// ─────────────────────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', startApp);
+</script>
+</body>
+</html>
